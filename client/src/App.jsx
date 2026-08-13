@@ -13,6 +13,7 @@ function App() {
 
       <section id="donors" className="section">
         <h2>Available Blood Donors</h2>
+
         <p className="section-subtitle">
           Find eligible donors who can help during emergencies.
         </p>
@@ -40,6 +41,7 @@ function App() {
 
       <section id="requests" className="section requests-section">
         <h2>Urgent Blood Requests</h2>
+
         <p className="section-subtitle">
           Help patients by responding to emergency blood requests.
         </p>
@@ -61,6 +63,7 @@ function App() {
 
       <section id="contact" className="contact-section">
         <h2>Need Blood?</h2>
+
         <p>
           During an emergency, connect with eligible donors quickly
           and save lives.
