@@ -12,12 +12,14 @@ app.use(express.json());
 
 // MongoDB connection
 mongoose
-  .connect(process.env.MONGODB_URI)
+  .connect(process.env.MONGODB_URI, {
+    serverSelectionTimeoutMS: 10000,
+  })
   .then(() => {
     console.log("MongoDB connected successfully");
   })
   .catch((error) => {
-    console.error("MongoDB connection error:", error);
+    console.error("MongoDB connection error:", error.message);
   });
 
 // WRITE - Add blood inventory
