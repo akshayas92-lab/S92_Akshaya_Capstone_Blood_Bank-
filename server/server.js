@@ -49,6 +49,19 @@ app.get("/api/blood-inventory", async (req, res) => {
   }
 });
 
+// READ - Get blood inventory by blood group
+app.get("/api/blood-inventory/:bloodGroup", async (req, res) => {
+  try {
+    const blood = await BloodInventory.find({
+      bloodGroup: req.params.bloodGroup,
+    });
+
+    res.status(200).json(blood);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Start server
 const PORT = process.env.PORT || 5000;
 
