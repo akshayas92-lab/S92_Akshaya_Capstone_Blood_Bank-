@@ -1,3 +1,4 @@
+```js
 const mongoose = require("mongoose");
 
 const donorSchema = new mongoose.Schema(
@@ -34,4 +35,15 @@ const donorSchema = new mongoose.Schema(
   }
 );
 
+// Relationship: One Donor can have many BloodRequests
+donorSchema.virtual("bloodRequests", {
+  ref: "BloodRequest",
+  localField: "_id",
+  foreignField: "donor",
+});
+
+donorSchema.set("toJSON", { virtuals: true });
+donorSchema.set("toObject", { virtuals: true });
+
 module.exports = mongoose.model("Donor", donorSchema);
+```

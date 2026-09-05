@@ -2,7 +2,7 @@ const dns = require("dns");
 
 dns.setServers(["8.8.8.8"]);
 
-require("dotenv").config();
+require("dotenv").config({ path: __dirname + "/.env" });
 
 const express = require("express");
 const mongoose = require("mongoose");
