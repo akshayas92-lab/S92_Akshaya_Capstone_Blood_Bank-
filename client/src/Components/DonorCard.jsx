@@ -3,11 +3,12 @@ function DonorCard({ name, bloodGroup, location }) {
     <div className="card">
       <div className="card-top">
         <div className="donor-avatar">
-          {name.charAt(0)}
+          {name ? name.charAt(0).toUpperCase() : "D"}
         </div>
 
-        <div>
+        <div className="donor-details">
           <h3>{name}</h3>
+
           <span className="available">
             ● Available
           </span>
@@ -17,6 +18,7 @@ function DonorCard({ name, bloodGroup, location }) {
       <div className="card-info">
         <p>
           <strong>Blood Group</strong>
+
           <span className="blood-badge">
             {bloodGroup}
           </span>
@@ -24,11 +26,16 @@ function DonorCard({ name, bloodGroup, location }) {
 
         <p>
           <strong>Location</strong>
+
           <span>{location}</span>
         </p>
       </div>
 
-      <button className="card-button">
+      <button
+        className="card-button"
+        type="button"
+        onClick={() => alert(`Contacting ${name}`)}
+      >
         Contact Donor
       </button>
     </div>
