@@ -8,6 +8,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 const BloodInventory = require("./models/BloodInventory");
 const User = require("./models/User");
@@ -18,6 +19,33 @@ app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.PORT || 5000;
+
+// =========================
+// JWT AUTHORIZATION MIDDLEWARE
+// =========================
+
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers["authorization"];
+
+  const token = authHeader && authHeader.split(" ")[1];
+
+  if (!token) {
+    return res.status(401).json({
+      error: "Access token required",
+    });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({
+        error: "Invalid or expired token",
+      });
+    }
+
+    req.user = user;
+    next();
+  });
+};
 
 console.log(
   "MongoDB URI loaded:",
@@ -114,7 +142,7 @@ async function startServer() {
 
     // =========================
     // LOGIN API
-    // USERNAME + PASSWORD
+    // USERNAME + PASSWORD + JWT
     // =========================
 
     app.post("/api/auth/login", async (req, res) => {
@@ -148,8 +176,25 @@ async function startServer() {
           });
         }
 
+        // =========================
+        // GENERATE JWT TOKEN
+        // =========================
+
+        const token = jwt.sign(
+          {
+            userId: user._id,
+            username: user.username,
+            role: user.role,
+          },
+          process.env.JWT_SECRET,
+          {
+            expiresIn: "1h",
+          }
+        );
+
         return res.status(200).json({
           message: "Login successful",
+          token,
           user: {
             id: user._id,
             username: user.username,
@@ -171,74 +216,86 @@ async function startServer() {
     // =========================
     // POST API
     // ADD INVENTORY
+    // JWT PROTECTED
     // =========================
 
-    app.post("/api/blood-inventory", async (req, res) => {
-      try {
-        const { bloodGroup, unitsAvailable } = req.body;
+    app.post(
+      "/api/blood-inventory",
+      authenticateToken,
+      async (req, res) => {
+        try {
+          const { bloodGroup, unitsAvailable } = req.body;
 
-        if (!bloodGroup || unitsAvailable === undefined) {
-          return res.status(400).json({
-            error: "Blood group and units available are required",
+          if (!bloodGroup || unitsAvailable === undefined) {
+            return res.status(400).json({
+              error: "Blood group and units available are required",
+            });
+          }
+
+          const units = Number(unitsAvailable);
+
+          if (Number.isNaN(units)) {
+            return res.status(400).json({
+              error: "Units available must be a number",
+            });
+          }
+
+          if (units < 0) {
+            return res.status(400).json({
+              error: "Units cannot be negative",
+            });
+          }
+
+          const blood = new BloodInventory({
+            bloodGroup: bloodGroup,
+            unitsAvailable: units,
+            lastUpdated: new Date(),
+          });
+
+          const savedBlood = await blood.save();
+
+          return res.status(201).json(savedBlood);
+        } catch (error) {
+          console.error("POST error:", error.message);
+
+          return res.status(500).json({
+            error: error.message,
           });
         }
-
-        const units = Number(unitsAvailable);
-
-        if (Number.isNaN(units)) {
-          return res.status(400).json({
-            error: "Units available must be a number",
-          });
-        }
-
-        if (units < 0) {
-          return res.status(400).json({
-            error: "Units cannot be negative",
-          });
-        }
-
-        const blood = new BloodInventory({
-          bloodGroup: bloodGroup,
-          unitsAvailable: units,
-          lastUpdated: new Date(),
-        });
-
-        const savedBlood = await blood.save();
-
-        return res.status(201).json(savedBlood);
-      } catch (error) {
-        console.error("POST error:", error.message);
-
-        return res.status(500).json({
-          error: error.message,
-        });
       }
-    });
+    );
 
     // =========================
     // GET ALL INVENTORY
+    // JWT PROTECTED
     // =========================
 
-    app.get("/api/blood-inventory", async (req, res) => {
-      try {
-        const blood = await BloodInventory.find();
+    app.get(
+      "/api/blood-inventory",
+      authenticateToken,
+      async (req, res) => {
+        try {
+          const blood = await BloodInventory.find();
 
-        return res.status(200).json(blood);
-      } catch (error) {
-        console.error("GET error:", error.message);
+          return res.status(200).json(blood);
+        } catch (error) {
+          console.error("GET error:", error.message);
 
-        return res.status(500).json({
-          error: error.message,
-        });
+          return res.status(500).json({
+            error: error.message,
+          });
+        }
       }
-    });
+    );
 
     // =========================
     // GET BY BLOOD GROUP
+    // JWT PROTECTED
     // =========================
 
     app.get(
       "/api/blood-inventory/group/:bloodGroup",
+      authenticateToken,
       async (req, res) => {
         try {
           const blood = await BloodInventory.find({
@@ -262,106 +319,116 @@ async function startServer() {
     // =========================
     // PUT API
     // UPDATE INVENTORY
+    // JWT PROTECTED
     // =========================
 
-    app.put("/api/blood-inventory/:id", async (req, res) => {
-      try {
-        const { id } = req.params;
-        const { unitsAvailable } = req.body;
+    app.put(
+      "/api/blood-inventory/:id",
+      authenticateToken,
+      async (req, res) => {
+        try {
+          const { id } = req.params;
+          const { unitsAvailable } = req.body;
 
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-          return res.status(400).json({
-            error: "Invalid inventory ID",
-          });
-        }
+          if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+              error: "Invalid inventory ID",
+            });
+          }
 
-        if (unitsAvailable === undefined) {
-          return res.status(400).json({
-            error: "unitsAvailable is required",
-          });
-        }
+          if (unitsAvailable === undefined) {
+            return res.status(400).json({
+              error: "unitsAvailable is required",
+            });
+          }
 
-        const units = Number(unitsAvailable);
+          const units = Number(unitsAvailable);
 
-        if (Number.isNaN(units)) {
-          return res.status(400).json({
-            error: "unitsAvailable must be a number",
-          });
-        }
+          if (Number.isNaN(units)) {
+            return res.status(400).json({
+              error: "unitsAvailable must be a number",
+            });
+          }
 
-        if (units < 0) {
-          return res.status(400).json({
-            error: "Units cannot be negative",
-          });
-        }
+          if (units < 0) {
+            return res.status(400).json({
+              error: "Units cannot be negative",
+            });
+          }
 
-        const updatedBlood =
-          await BloodInventory.findByIdAndUpdate(
-            id,
-            {
-              $set: {
-                unitsAvailable: units,
-                lastUpdated: new Date(),
+          const updatedBlood =
+            await BloodInventory.findByIdAndUpdate(
+              id,
+              {
+                $set: {
+                  unitsAvailable: units,
+                  lastUpdated: new Date(),
+                },
               },
-            },
-            {
-              new: true,
-              runValidators: true,
-            }
-          );
+              {
+                new: true,
+                runValidators: true,
+              }
+            );
 
-        if (!updatedBlood) {
-          return res.status(404).json({
-            error: "Blood inventory not found",
+          if (!updatedBlood) {
+            return res.status(404).json({
+              error: "Blood inventory not found",
+            });
+          }
+
+          return res.status(200).json(updatedBlood);
+        } catch (error) {
+          console.error("PUT error:", error);
+
+          return res.status(500).json({
+            error: error.message,
           });
         }
-
-        return res.status(200).json(updatedBlood);
-      } catch (error) {
-        console.error("PUT error:", error);
-
-        return res.status(500).json({
-          error: error.message,
-        });
       }
-    });
+    );
 
     // =========================
     // DELETE API
     // DELETE INVENTORY
+    // JWT PROTECTED
     // =========================
 
-    app.delete("/api/blood-inventory/:id", async (req, res) => {
-      try {
-        const { id } = req.params;
+    app.delete(
+      "/api/blood-inventory/:id",
+      authenticateToken,
+      async (req, res) => {
+        try {
+          const { id } = req.params;
 
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-          return res.status(400).json({
-            error: "Invalid inventory ID",
+          if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+              error: "Invalid inventory ID",
+            });
+          }
+
+          const deletedBlood =
+            await BloodInventory.findByIdAndDelete(id);
+
+          if (!deletedBlood) {
+            return res.status(404).json({
+              error: "Blood inventory not found",
+            });
+          }
+
+          return res.status(200).json({
+            message: "Blood inventory deleted successfully",
+            deletedBlood: deletedBlood,
+          });
+        } catch (error) {
+          console.error("DELETE error:", error);
+
+          return res.status(500).json({
+            error: error.message,
           });
         }
-
-        const deletedBlood =
-          await BloodInventory.findByIdAndDelete(id);
-
-        if (!deletedBlood) {
-          return res.status(404).json({
-            error: "Blood inventory not found",
-          });
-        }
-
-        return res.status(200).json({
-          message: "Blood inventory deleted successfully",
-          deletedBlood: deletedBlood,
-        });
-      } catch (error) {
-        console.error("DELETE error:", error);
-
-        return res.status(500).json({
-          error: error.message,
-        });
       }
-    });
+    );
 
     // =========================
     // START SERVER
