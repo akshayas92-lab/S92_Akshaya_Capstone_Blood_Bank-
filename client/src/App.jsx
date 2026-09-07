@@ -1,10 +1,19 @@
-
 import { useEffect, useState } from "react";
 import Navbar from "./Components/Navbar";
 import Hero from "./Components/Hero";
 import "./App.css";
 
+import {
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged,
+} from "firebase/auth";
+
+import { auth, googleProvider } from "./firebase";
+
 function App() {
+  const [user, setUser] = useState(null);
+
   const [inventory, setInventory] = useState([]);
 
   const [bloodGroup, setBloodGroup] = useState("A+");
@@ -16,11 +25,46 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [authLoading, setAuthLoading] = useState(true);
+
   const API_URL = "http://localhost:5000/api/blood-inventory";
+
+  // =========================
+  // GOOGLE AUTHENTICATION
+  // =========================
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setAuthLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const handleGoogleLogin = async () => {
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (err) {
+      console.error("Google login error:", err);
+      alert("Google login failed. Please try again.");
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      alert("Logged out successfully.");
+    } catch (err) {
+      console.error("Logout error:", err);
+      alert("Logout failed.");
+    }
+  };
 
   // =========================
   // GET ALL INVENTORY
   // =========================
+
   const fetchInventory = async () => {
     try {
       setLoading(true);
@@ -43,12 +87,15 @@ function App() {
   };
 
   useEffect(() => {
-    fetchInventory();
-  }, []);
+    if (user) {
+      fetchInventory();
+    }
+  }, [user]);
 
   // =========================
   // ADD INVENTORY
   // =========================
+
   const handleAddInventory = async (e) => {
     e.preventDefault();
 
@@ -94,6 +141,7 @@ function App() {
   // =========================
   // START UPDATE
   // =========================
+
   const handleUpdateClick = (item) => {
     setEditingId(item._id);
     setEditUnits(String(item.unitsAvailable));
@@ -102,6 +150,7 @@ function App() {
   // =========================
   // CANCEL UPDATE
   // =========================
+
   const handleCancelUpdate = () => {
     setEditingId(null);
     setEditUnits("");
@@ -110,6 +159,7 @@ function App() {
   // =========================
   // SAVE UPDATE
   // =========================
+
   const handleSaveUpdate = async (id) => {
     if (editUnits === "") {
       alert("Please enter number of units.");
@@ -139,7 +189,6 @@ function App() {
         return;
       }
 
-      // Update the card immediately
       setInventory((currentInventory) =>
         currentInventory.map((item) =>
           item._id === id
@@ -165,6 +214,7 @@ function App() {
   // =========================
   // DELETE INVENTORY
   // =========================
+
   const handleDelete = async (id) => {
     const confirmDelete = window.confirm(
       "Are you sure you want to delete this blood inventory?"
@@ -186,7 +236,6 @@ function App() {
         return;
       }
 
-      // Remove deleted item from screen
       setInventory((currentInventory) =>
         currentInventory.filter((item) => item._id !== id)
       );
@@ -198,15 +247,67 @@ function App() {
     }
   };
 
+  // =========================
+  // AUTH LOADING
+  // =========================
+
+  if (authLoading) {
+    return (
+      <div className="auth-container">
+        <h2>Checking authentication...</h2>
+      </div>
+    );
+  }
+
+  // =========================
+  // LOGIN SCREEN
+  // =========================
+
+  if (!user) {
+    return (
+      <div className="auth-container">
+        <div className="auth-card">
+          <h1>Blood Bank</h1>
+
+          <p>Login to access the Blood Bank System</p>
+
+          <button
+            type="button"
+            className="google-login-btn"
+            onClick={handleGoogleLogin}
+          >
+            Continue with Google
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // =========================
+  // MAIN APPLICATION
+  // =========================
+
   return (
     <>
       <Navbar />
+
+      <div className="user-auth-bar">
+        <div>
+          <span>Welcome, </span>
+          <strong>{user.displayName || user.email}</strong>
+        </div>
+
+        <button type="button" onClick={handleLogout}>
+          Logout
+        </button>
+      </div>
 
       <Hero />
 
       {/* =========================
           BLOOD INVENTORY
       ========================= */}
+
       <section id="inventory" className="section">
         <h2>Blood Inventory</h2>
 
@@ -217,6 +318,7 @@ function App() {
         {/* =========================
             ADD INVENTORY FORM
         ========================= */}
+
         <div className="inventory-form">
           <h3>Add Blood Inventory</h3>
 
@@ -250,16 +352,19 @@ function App() {
         {/* =========================
             ERROR
         ========================= */}
+
         {error && <p className="error-message">{error}</p>}
 
         {/* =========================
             LOADING
         ========================= */}
+
         {loading && <p>Loading blood inventory...</p>}
 
         {/* =========================
             INVENTORY CARDS
         ========================= */}
+
         <div className="cards">
           {!loading && inventory.length === 0 && (
             <p>No blood inventory available.</p>
@@ -269,9 +374,8 @@ function App() {
             <div className="card" key={item._id}>
               <h3>{item.bloodGroup}</h3>
 
-              {/* =========================
-                  NORMAL VIEW
-              ========================= */}
+              {/* NORMAL VIEW */}
+
               {editingId !== item._id && (
                 <>
                   <p>
@@ -299,9 +403,8 @@ function App() {
                 </>
               )}
 
-              {/* =========================
-                  UPDATE VIEW
-              ========================= */}
+              {/* UPDATE VIEW */}
+
               {editingId === item._id && (
                 <div className="update-box">
                   <p>Update available units:</p>
@@ -341,6 +444,7 @@ function App() {
       {/* =========================
           CONTACT US
       ========================= */}
+
       <section id="contact" className="section">
         <h2>Contact Us</h2>
 
@@ -356,6 +460,7 @@ function App() {
       {/* =========================
           FOOTER
       ========================= */}
+
       <footer>
         <p>© 2026 Blood Bank System. All rights reserved.</p>
       </footer>
