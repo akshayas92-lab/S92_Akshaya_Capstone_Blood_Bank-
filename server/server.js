@@ -7,8 +7,10 @@ require("dotenv").config({ path: __dirname + "/.env" });
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const bcrypt = require("bcryptjs");
 
 const BloodInventory = require("./models/BloodInventory");
+const User = require("./models/User");
 
 const app = express();
 
@@ -34,6 +36,137 @@ async function startServer() {
 
     console.log("MongoDB connected successfully");
     console.log("MongoDB state:", mongoose.connection.readyState);
+
+    // =========================
+    // REGISTER API
+    // USERNAME + PASSWORD
+    // =========================
+
+    app.post("/api/auth/register", async (req, res) => {
+      try {
+        const {
+          username,
+          password,
+          name,
+          email,
+          phone,
+          role,
+        } = req.body;
+
+        if (!username || !password || !name || !email || !phone) {
+          return res.status(400).json({
+            error:
+              "Username, password, name, email and phone are required",
+          });
+        }
+
+        const cleanUsername = username.trim();
+        const cleanEmail = email.trim().toLowerCase();
+
+        // Check duplicate username or email
+        const existingUser = await User.findOne({
+          $or: [
+            { username: cleanUsername },
+            { email: cleanEmail },
+          ],
+        });
+
+        if (existingUser) {
+          return res.status(409).json({
+            error: "Username or email already exists",
+          });
+        }
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Create user
+        const user = new User({
+          username: cleanUsername,
+          password: hashedPassword,
+          name: name.trim(),
+          email: cleanEmail,
+          phone: phone.trim(),
+          role: role || "recipient",
+        });
+
+        const savedUser = await user.save();
+
+        return res.status(201).json({
+          message: "User registered successfully",
+          user: {
+            id: savedUser._id,
+            username: savedUser.username,
+            name: savedUser.name,
+            email: savedUser.email,
+            phone: savedUser.phone,
+            role: savedUser.role,
+          },
+        });
+      } catch (error) {
+        console.error("REGISTER error:", error);
+
+        return res.status(500).json({
+          error: error.message,
+        });
+      }
+    });
+
+    // =========================
+    // LOGIN API
+    // USERNAME + PASSWORD
+    // =========================
+
+    app.post("/api/auth/login", async (req, res) => {
+      try {
+        const { username, password } = req.body;
+
+        if (!username || !password) {
+          return res.status(400).json({
+            error: "Username and password are required",
+          });
+        }
+
+        const user = await User.findOne({
+          username: username.trim(),
+        });
+
+        if (!user) {
+          return res.status(401).json({
+            error: "Invalid username or password",
+          });
+        }
+
+        const passwordMatch = await bcrypt.compare(
+          password,
+          user.password
+        );
+
+        if (!passwordMatch) {
+          return res.status(401).json({
+            error: "Invalid username or password",
+          });
+        }
+
+        return res.status(200).json({
+          message: "Login successful",
+          user: {
+            id: user._id,
+            username: user.username,
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            role: user.role,
+          },
+        });
+      } catch (error) {
+        console.error("LOGIN error:", error);
+
+        return res.status(500).json({
+          error: error.message,
+        });
+      }
+    });
 
     // =========================
     // POST API
@@ -136,20 +269,12 @@ async function startServer() {
         const { id } = req.params;
         const { unitsAvailable } = req.body;
 
-        console.log("==============================");
-        console.log("PUT REQUEST RECEIVED");
-        console.log("ID:", id);
-        console.log("New units:", unitsAvailable);
-        console.log("==============================");
-
-        // Check ID
         if (!mongoose.Types.ObjectId.isValid(id)) {
           return res.status(400).json({
             error: "Invalid inventory ID",
           });
         }
 
-        // Check units
         if (unitsAvailable === undefined) {
           return res.status(400).json({
             error: "unitsAvailable is required",
@@ -170,7 +295,6 @@ async function startServer() {
           });
         }
 
-        // Find and update
         const updatedBlood =
           await BloodInventory.findByIdAndUpdate(
             id,
@@ -186,15 +310,11 @@ async function startServer() {
             }
           );
 
-        // Inventory not found
         if (!updatedBlood) {
           return res.status(404).json({
             error: "Blood inventory not found",
           });
         }
-
-        console.log("UPDATED INVENTORY:");
-        console.log(updatedBlood);
 
         return res.status(200).json(updatedBlood);
       } catch (error) {
@@ -215,12 +335,6 @@ async function startServer() {
       try {
         const { id } = req.params;
 
-        console.log("==============================");
-        console.log("DELETE REQUEST RECEIVED");
-        console.log("ID:", id);
-        console.log("==============================");
-
-        // Check ID
         if (!mongoose.Types.ObjectId.isValid(id)) {
           return res.status(400).json({
             error: "Invalid inventory ID",
@@ -230,15 +344,11 @@ async function startServer() {
         const deletedBlood =
           await BloodInventory.findByIdAndDelete(id);
 
-        // Inventory not found
         if (!deletedBlood) {
           return res.status(404).json({
             error: "Blood inventory not found",
           });
         }
-
-        console.log("DELETED INVENTORY:");
-        console.log(deletedBlood);
 
         return res.status(200).json({
           message: "Blood inventory deleted successfully",
