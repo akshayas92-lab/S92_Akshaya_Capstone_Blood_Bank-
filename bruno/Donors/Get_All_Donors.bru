@@ -1,0 +1,44 @@
+meta {
+  name: Get All Donors
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://localhost:5000/api/donors
+}
+
+headers {
+  Content-Type: application/json
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Response is an array", function() {
+    expect(res.getBody()).to.be.an('array');
+  });
+}
+
+docs {
+  # Get All Donors
+  
+  Retrieves a list of all registered donors in the system.
+  
+  ## Response
+  Array of donor objects, each containing:
+  - `_id`: Unique donor identifier
+  - `user`: User information (populated)
+  - `bloodGroup`: Donor's blood group
+  - `age`: Donor's age
+  - `location`: Donor's location
+  - `available`: Availability status
+  - `lastDonationDate`: Date of last donation (if any)
+  - `createdAt`: Timestamp of registration
+  
+  ## Status Codes
+  - 200: Success
+  - 500: Server error
+}

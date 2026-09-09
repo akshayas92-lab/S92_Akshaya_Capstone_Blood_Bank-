@@ -1,0 +1,61 @@
+meta {
+  name: Create Blood Request
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:5000/api/blood-requests
+  body: json
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "bloodGroup": "O+",
+    "unitsRequired": 2,
+    "hospitalName": "Apollo Hospital",
+    "location": "Chennai",
+    "urgency": "high"
+  }
+}
+
+tests {
+  test("Status is 201", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+  
+  test("Response contains request data", function() {
+    expect(res.getBody()).to.have.property('_id');
+    expect(res.getBody()).to.have.property('status').to.equal('pending');
+  });
+}
+
+docs {
+  # Create Blood Request
+  
+  Creates a new blood request for emergency blood donation. Requires authentication.
+  
+  ## Authentication
+  Requires JWT token in Authorization header: `Bearer <token>`
+  
+  ## Request Body
+  - `bloodGroup` (string, required): Blood group (A+, A-, B+, B-, AB+, AB-, O+, O-)
+  - `unitsRequired` (number, required): Units required (minimum 1)
+  - `hospitalName` (string, required): Hospital name
+  - `location` (string, required): Location of hospital
+  - `urgency` (string, optional): Urgency level (low, medium, high, critical) - default: medium
+  
+  ## Response
+  Blood request object with status "pending"
+  
+  ## Status Codes
+  - 201: Request created successfully
+  - 400: Invalid input
+  - 401: Missing or invalid token
+  - 500: Server error
+}

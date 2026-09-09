@@ -1,0 +1,57 @@
+meta {
+  name: Create Donor
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:5000/api/donors
+  body: json
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "bloodGroup": "O+",
+    "age": 25,
+    "location": "Chennai"
+  }
+}
+
+tests {
+  test("Status is 201", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+  
+  test("Response contains donor data", function() {
+    expect(res.getBody()).to.have.property('_id');
+    expect(res.getBody()).to.have.property('bloodGroup').to.equal('O+');
+  });
+}
+
+docs {
+  # Create Donor
+  
+  Creates a new donor profile for a user. Requires authentication.
+  
+  ## Authentication
+  Requires JWT token in Authorization header: `Bearer <token>`
+  
+  ## Request Body
+  - `bloodGroup` (string, required): Blood group (A+, A-, B+, B-, AB+, AB-, O+, O-)
+  - `age` (number, required): Age of donor (minimum 18)
+  - `location` (string, required): Donor's location
+  
+  ## Response
+  - Donor object with all fields including populated user information
+  
+  ## Status Codes
+  - 201: Donor created successfully
+  - 400: Invalid input
+  - 401: Missing or invalid token
+  - 500: Server error
+}

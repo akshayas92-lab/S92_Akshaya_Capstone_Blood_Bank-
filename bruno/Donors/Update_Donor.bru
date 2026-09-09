@@ -1,0 +1,60 @@
+meta {
+  name: Update Donor
+  type: http
+  seq: 5
+}
+
+put {
+  url: http://localhost:5000/api/donors/:id
+  body: json
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+}
+
+params {
+  id: 
+}
+
+body:json {
+  {
+    "available": false,
+    "location": "Bangalore"
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}
+
+docs {
+  # Update Donor
+  
+  Updates donor information. Requires authentication.
+  
+  ## Authentication
+  Requires JWT token in Authorization header
+  
+  ## Path Parameters
+  - `id` (string, required): Donor's MongoDB ID
+  
+  ## Request Body (any of the following)
+  - `bloodGroup` (string): Blood group
+  - `age` (number): Age (minimum 18)
+  - `location` (string): Location
+  - `available` (boolean): Availability status
+  
+  ## Response
+  Updated donor object
+  
+  ## Status Codes
+  - 200: Success
+  - 400: Invalid input or ID
+  - 401: Missing or invalid token
+  - 404: Donor not found
+  - 500: Server error
+}

@@ -1,0 +1,57 @@
+meta {
+  name: Match Donors for Request
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:5000/api/match-donors
+  body: json
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "bloodRequestId": "{{bloodRequestId}}"
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Response contains matching donors", function() {
+    expect(res.getBody()).to.have.property('matchingDonors');
+  });
+}
+
+docs {
+  # Match Donors for Blood Request
+  
+  Finds all eligible donors for a specific blood request based on blood group and location.
+  
+  ## Request Body
+  - `bloodRequestId` (string, required): Blood request's MongoDB ID
+  
+  ## Response
+  - `requestId`: The request ID
+  - `requiredBloodGroup`: Blood group needed
+  - `requiredLocation`: Location needed
+  - `matchingDonorsCount`: Number of matching donors
+  - `matchingDonors`: Array of matching donor objects
+  
+  ## Matching Criteria
+  - Same blood group as requested
+  - Available status is true
+  - Same location as hospital
+  
+  ## Status Codes
+  - 200: Success
+  - 400: Missing or invalid blood request ID
+  - 404: Blood request not found
+  - 500: Server error
+}

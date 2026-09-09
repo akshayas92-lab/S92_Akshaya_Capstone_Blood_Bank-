@@ -1,0 +1,38 @@
+meta {
+  name: Get Blood Inventory by Blood Group
+  type: http
+  seq: 3
+}
+
+get {
+  url: http://localhost:5000/api/blood-inventory/group/:bloodGroup
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+}
+
+params {
+  bloodGroup: O+
+}
+
+docs {
+  # Get Blood Inventory by Blood Group
+  
+  Retrieves inventory for a specific blood group. Requires authentication.
+  
+  ## Authentication
+  Requires JWT token in Authorization header
+  
+  ## Path Parameters
+  - `bloodGroup` (string, required): Blood group (A+, A-, B+, B-, AB+, AB-, O+, O-)
+  
+  ## Response
+  Array of blood inventory objects matching the blood group
+  
+  ## Status Codes
+  - 200: Success
+  - 401: Missing or invalid token
+  - 500: Server error
+}

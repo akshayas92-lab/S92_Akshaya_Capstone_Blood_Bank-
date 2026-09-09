@@ -1,0 +1,48 @@
+meta {
+  name: Upload File
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:5000/api/upload
+}
+
+headers {
+}
+
+body: form-data {
+  file: @file
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Response contains file info", function() {
+    expect(res.getBody()).to.have.property('file');
+  });
+}
+
+docs {
+  # Upload File
+  
+  Uploads a file to the server.
+  
+  ## Request
+  - `file` (file, required): File to upload (multipart/form-data)
+  
+  ## Response
+  - `message`: Success message
+  - `file`: File information including:
+    - `filename`: Generated filename
+    - `originalName`: Original filename
+    - `path`: File path on server
+    - `size`: File size in bytes
+  
+  ## Status Codes
+  - 200: File uploaded successfully
+  - 400: No file provided
+  - 500: Server error
+}

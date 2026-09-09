@@ -1,0 +1,46 @@
+meta {
+  name: Delete Donor
+  type: http
+  seq: 6
+}
+
+delete {
+  url: http://localhost:5000/api/donors/:id
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+}
+
+params {
+  id: 
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}
+
+docs {
+  # Delete Donor
+  
+  Deletes a donor profile. Requires authentication.
+  
+  ## Authentication
+  Requires JWT token in Authorization header
+  
+  ## Path Parameters
+  - `id` (string, required): Donor's MongoDB ID
+  
+  ## Response
+  Success message and deleted donor object
+  
+  ## Status Codes
+  - 200: Success
+  - 400: Invalid donor ID
+  - 401: Missing or invalid token
+  - 404: Donor not found
+  - 500: Server error
+}

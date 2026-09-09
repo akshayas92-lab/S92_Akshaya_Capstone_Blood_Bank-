@@ -1,0 +1,46 @@
+meta {
+  name: Delete Blood Request
+  type: http
+  seq: 6
+}
+
+delete {
+  url: http://localhost:5000/api/blood-requests/:id
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+}
+
+params {
+  id: 
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}
+
+docs {
+  # Delete Blood Request
+  
+  Deletes a blood request. Requires authentication.
+  
+  ## Authentication
+  Requires JWT token in Authorization header
+  
+  ## Path Parameters
+  - `id` (string, required): Blood request's MongoDB ID
+  
+  ## Response
+  Success message and deleted request object
+  
+  ## Status Codes
+  - 200: Success
+  - 400: Invalid request ID
+  - 401: Missing or invalid token
+  - 404: Request not found
+  - 500: Server error
+}

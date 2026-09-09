@@ -1,0 +1,39 @@
+meta {
+  name: Get Donors By Blood Group
+  type: http
+  seq: 4
+}
+
+get {
+  url: http://localhost:5000/api/donors/blood-group/:bloodGroup
+}
+
+headers {
+  Content-Type: application/json
+}
+
+params {
+  bloodGroup: O+
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}
+
+docs {
+  # Get Donors By Blood Group
+  
+  Retrieves all available donors with a specific blood group.
+  
+  ## Path Parameters
+  - `bloodGroup` (string, required): Blood group (A+, A-, B+, B-, AB+, AB-, O+, O-)
+  
+  ## Response
+  Array of donor objects filtered by blood group and availability status
+  
+  ## Status Codes
+  - 200: Success
+  - 500: Server error
+}

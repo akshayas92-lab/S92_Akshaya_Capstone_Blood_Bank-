@@ -1,0 +1,52 @@
+meta {
+  name: Login User
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:5000/api/auth/login
+  body: json
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "username": "john_donor",
+    "password": "password123"
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Response contains token", function() {
+    expect(res.getBody()).to.have.property('token');
+  });
+  
+  test("Token is not empty", function() {
+    var data = res.getBody();
+    expect(data.token).to.be.a('string');
+    expect(data.token.length).to.be.greaterThan(0);
+  });
+}
+
+docs {
+  # Login User
+  
+  Authenticates a user and returns a JWT token for subsequent API requests.
+  
+  ## Request Body
+  - `username` (string, required): User's username
+  - `password` (string, required): User's password
+  
+  ## Response
+  - `message` (string): Success message
+  - `token` (string): JWT token for authentication (expires in 1 hour)
+  - `user` (object): User details including id, username, name, email, phone, role
+}
