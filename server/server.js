@@ -9,14 +9,38 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const multer = require("multer");
+const path = require("path");
 
 const BloodInventory = require("./models/BloodInventory");
 const User = require("./models/User");
 
 const app = express();
 
+// =========================
+// MULTER FILE UPLOAD SETUP
+// =========================
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, "uploads"));
+  },
+
+  filename: function (req, file, cb) {
+    const uniqueName =
+      Date.now() + "-" + Math.round(Math.random() * 1e9);
+
+    cb(null, uniqueName + path.extname(file.originalname));
+  },
+});
+
+const upload = multer({ storage });
+
 app.use(cors());
 app.use(express.json());
+
+// Serve uploaded files
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 const PORT = process.env.PORT || 5000;
 
@@ -91,7 +115,6 @@ async function startServer() {
         const cleanUsername = username.trim();
         const cleanEmail = email.trim().toLowerCase();
 
-        // Check duplicate username or email
         const existingUser = await User.findOne({
           $or: [
             { username: cleanUsername },
@@ -105,10 +128,8 @@ async function startServer() {
           });
         }
 
-        // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create user
         const user = new User({
           username: cleanUsername,
           password: hashedPassword,
@@ -176,10 +197,6 @@ async function startServer() {
           });
         }
 
-        // =========================
-        // GENERATE JWT TOKEN
-        // =========================
-
         const token = jwt.sign(
           {
             userId: user._id,
@@ -212,6 +229,40 @@ async function startServer() {
         });
       }
     });
+
+    // =========================
+    // FILE UPLOAD API
+    // =========================
+
+    app.post(
+      "/api/upload",
+      upload.single("file"),
+      (req, res) => {
+        try {
+          if (!req.file) {
+            return res.status(400).json({
+              error: "No file uploaded",
+            });
+          }
+
+          return res.status(200).json({
+            message: "File uploaded successfully",
+            file: {
+              filename: req.file.filename,
+              originalName: req.file.originalname,
+              path: `/uploads/${req.file.filename}`,
+              size: req.file.size,
+            },
+          });
+        } catch (error) {
+          console.error("FILE UPLOAD error:", error);
+
+          return res.status(500).json({
+            error: error.message,
+          });
+        }
+      }
+    );
 
     // =========================
     // POST API
