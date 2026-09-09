@@ -1,0 +1,46 @@
+meta {
+  name: Get All Blood Requests
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://localhost:5000/api/blood-requests
+}
+
+headers {
+  Content-Type: application/json
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Response is an array", function() {
+    expect(res.getBody()).to.be.an('array');
+  });
+}
+
+docs {
+  # Get All Blood Requests
+  
+  Retrieves all blood requests in the system.
+  
+  ## Response
+  Array of blood request objects, each containing:
+  - `_id`: Unique request identifier
+  - `requester`: User who created the request
+  - `donor`: Assigned donor (if fulfilled)
+  - `bloodGroup`: Required blood group
+  - `unitsRequired`: Number of units needed
+  - `hospitalName`: Hospital name
+  - `location`: Hospital location
+  - `urgency`: Urgency level
+  - `status`: Request status (pending, fulfilled, cancelled)
+  - `createdAt`: Timestamp of creation
+  
+  ## Status Codes
+  - 200: Success
+  - 500: Server error
+}

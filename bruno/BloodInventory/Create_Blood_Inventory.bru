@@ -1,0 +1,50 @@
+meta {
+  name: Create Blood Inventory
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:5000/api/blood-inventory
+  body: json
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "bloodGroup": "A+",
+    "unitsAvailable": 10
+  }
+}
+
+tests {
+  test("Status is 201", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+}
+
+docs {
+  # Create Blood Inventory
+  
+  Adds blood to inventory. Requires authentication.
+  
+  ## Authentication
+  Requires JWT token in Authorization header
+  
+  ## Request Body
+  - `bloodGroup` (string, required): Blood group (A+, A-, B+, B-, AB+, AB-, O+, O-)
+  - `unitsAvailable` (number, required): Number of units
+  
+  ## Response
+  Blood inventory object
+  
+  ## Status Codes
+  - 201: Inventory created
+  - 400: Invalid input
+  - 401: Missing or invalid token
+  - 500: Server error
+}

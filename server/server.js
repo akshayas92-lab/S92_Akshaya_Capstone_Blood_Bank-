@@ -14,6 +14,8 @@ const path = require("path");
 
 const BloodInventory = require("./models/BloodInventory");
 const User = require("./models/User");
+const Donor = require("./models/Donor");
+const BloodRequest = require("./models/BloodRequest");
 
 const app = express();
 
@@ -480,6 +482,458 @@ async function startServer() {
         }
       }
     );
+
+    // =========================
+    // DONOR API ENDPOINTS
+    // =========================
+
+    // POST - CREATE DONOR
+    app.post("/api/donors", authenticateToken, async (req, res) => {
+      try {
+        const { bloodGroup, age, location } = req.body;
+
+        if (!bloodGroup || !age || !location) {
+          return res.status(400).json({
+            error: "Blood group, age, and location are required",
+          });
+        }
+
+        if (age < 18) {
+          return res.status(400).json({
+            error: "Donors must be at least 18 years old",
+          });
+        }
+
+        const donor = new Donor({
+          user: req.user.userId,
+          bloodGroup,
+          age,
+          location,
+          available: true,
+        });
+
+        const savedDonor = await donor.save();
+        const populatedDonor = await savedDonor.populate("user");
+
+        return res.status(201).json(populatedDonor);
+      } catch (error) {
+        console.error("CREATE DONOR error:", error);
+        return res.status(500).json({
+          error: error.message,
+        });
+      }
+    });
+
+    // GET ALL DONORS
+    app.get("/api/donors", async (req, res) => {
+      try {
+        const donors = await Donor.find().populate("user");
+        return res.status(200).json(donors);
+      } catch (error) {
+        console.error("GET DONORS error:", error);
+        return res.status(500).json({
+          error: error.message,
+        });
+      }
+    });
+
+    // GET DONOR BY ID
+    app.get("/api/donors/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+          return res.status(400).json({
+            error: "Invalid donor ID",
+          });
+        }
+
+        const donor = await Donor.findById(id).populate("user");
+
+        if (!donor) {
+          return res.status(404).json({
+            error: "Donor not found",
+          });
+        }
+
+        return res.status(200).json(donor);
+      } catch (error) {
+        console.error("GET DONOR BY ID error:", error);
+        return res.status(500).json({
+          error: error.message,
+        });
+      }
+    });
+
+    // GET DONORS BY BLOOD GROUP
+    app.get("/api/donors/blood-group/:bloodGroup", async (req, res) => {
+      try {
+        const { bloodGroup } = req.params;
+        const donors = await Donor.find({
+          bloodGroup,
+          available: true,
+        }).populate("user");
+
+        return res.status(200).json(donors);
+      } catch (error) {
+        console.error("GET DONORS BY BLOOD GROUP error:", error);
+        return res.status(500).json({
+          error: error.message,
+        });
+      }
+    });
+
+    // UPDATE DONOR
+    app.put("/api/donors/:id", authenticateToken, async (req, res) => {
+      try {
+        const { id } = req.params;
+        const { bloodGroup, age, location, available } = req.body;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+          return res.status(400).json({
+            error: "Invalid donor ID",
+          });
+        }
+
+        const updateData = {};
+        if (bloodGroup) updateData.bloodGroup = bloodGroup;
+        if (age) {
+          if (age < 18) {
+            return res.status(400).json({
+              error: "Donors must be at least 18 years old",
+            });
+          }
+          updateData.age = age;
+        }
+        if (location) updateData.location = location;
+        if (available !== undefined) updateData.available = available;
+
+        const updatedDonor = await Donor.findByIdAndUpdate(
+          id,
+          { $set: updateData },
+          { new: true, runValidators: true }
+        ).populate("user");
+
+        if (!updatedDonor) {
+          return res.status(404).json({
+            error: "Donor not found",
+          });
+        }
+
+        return res.status(200).json(updatedDonor);
+      } catch (error) {
+        console.error("UPDATE DONOR error:", error);
+        return res.status(500).json({
+          error: error.message,
+        });
+      }
+    });
+
+    // DELETE DONOR
+    app.delete("/api/donors/:id", authenticateToken, async (req, res) => {
+      try {
+        const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+          return res.status(400).json({
+            error: "Invalid donor ID",
+          });
+        }
+
+        const deletedDonor = await Donor.findByIdAndDelete(id);
+
+        if (!deletedDonor) {
+          return res.status(404).json({
+            error: "Donor not found",
+          });
+        }
+
+        return res.status(200).json({
+          message: "Donor deleted successfully",
+          donor: deletedDonor,
+        });
+      } catch (error) {
+        console.error("DELETE DONOR error:", error);
+        return res.status(500).json({
+          error: error.message,
+        });
+      }
+    });
+
+    // =========================
+    // BLOOD REQUEST API ENDPOINTS
+    // =========================
+
+    // POST - CREATE BLOOD REQUEST
+    app.post("/api/blood-requests", authenticateToken, async (req, res) => {
+      try {
+        const {
+          bloodGroup,
+          unitsRequired,
+          hospitalName,
+          location,
+          urgency,
+        } = req.body;
+
+        if (!bloodGroup || !unitsRequired || !hospitalName || !location) {
+          return res.status(400).json({
+            error:
+              "Blood group, units required, hospital name, and location are required",
+          });
+        }
+
+        if (unitsRequired < 1) {
+          return res.status(400).json({
+            error: "Units required must be at least 1",
+          });
+        }
+
+        const bloodRequest = new BloodRequest({
+          requester: req.user.userId,
+          bloodGroup,
+          unitsRequired,
+          hospitalName,
+          location,
+          urgency: urgency || "medium",
+          status: "pending",
+        });
+
+        const savedRequest = await bloodRequest.save();
+        const populatedRequest = await savedRequest.populate([
+          { path: "requester" },
+          { path: "donor" },
+        ]);
+
+        return res.status(201).json(populatedRequest);
+      } catch (error) {
+        console.error("CREATE BLOOD REQUEST error:", error);
+        return res.status(500).json({
+          error: error.message,
+        });
+      }
+    });
+
+    // GET ALL BLOOD REQUESTS
+    app.get("/api/blood-requests", async (req, res) => {
+      try {
+        const requests = await BloodRequest.find().populate([
+          { path: "requester" },
+          { path: "donor" },
+        ]);
+
+        return res.status(200).json(requests);
+      } catch (error) {
+        console.error("GET BLOOD REQUESTS error:", error);
+        return res.status(500).json({
+          error: error.message,
+        });
+      }
+    });
+
+    // GET BLOOD REQUEST BY ID
+    app.get("/api/blood-requests/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+          return res.status(400).json({
+            error: "Invalid request ID",
+          });
+        }
+
+        const request = await BloodRequest.findById(id).populate([
+          { path: "requester" },
+          { path: "donor" },
+        ]);
+
+        if (!request) {
+          return res.status(404).json({
+            error: "Blood request not found",
+          });
+        }
+
+        return res.status(200).json(request);
+      } catch (error) {
+        console.error("GET BLOOD REQUEST BY ID error:", error);
+        return res.status(500).json({
+          error: error.message,
+        });
+      }
+    });
+
+    // GET PENDING BLOOD REQUESTS
+    app.get("/api/blood-requests/status/pending", async (req, res) => {
+      try {
+        const requests = await BloodRequest.find({
+          status: "pending",
+        }).populate([
+          { path: "requester" },
+          { path: "donor" },
+        ]);
+
+        return res.status(200).json(requests);
+      } catch (error) {
+        console.error("GET PENDING BLOOD REQUESTS error:", error);
+        return res.status(500).json({
+          error: error.message,
+        });
+      }
+    });
+
+    // UPDATE BLOOD REQUEST
+    app.put("/api/blood-requests/:id", authenticateToken, async (req, res) => {
+      try {
+        const { id } = req.params;
+        const { donor, status, urgency } = req.body;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+          return res.status(400).json({
+            error: "Invalid request ID",
+          });
+        }
+
+        const updateData = {};
+        if (donor) updateData.donor = donor;
+        if (status) updateData.status = status;
+        if (urgency) updateData.urgency = urgency;
+
+        const updatedRequest = await BloodRequest.findByIdAndUpdate(
+          id,
+          { $set: updateData },
+          { new: true, runValidators: true }
+        ).populate([
+          { path: "requester" },
+          { path: "donor" },
+        ]);
+
+        if (!updatedRequest) {
+          return res.status(404).json({
+            error: "Blood request not found",
+          });
+        }
+
+        return res.status(200).json(updatedRequest);
+      } catch (error) {
+        console.error("UPDATE BLOOD REQUEST error:", error);
+        return res.status(500).json({
+          error: error.message,
+        });
+      }
+    });
+
+    // DELETE BLOOD REQUEST
+    app.delete(
+      "/api/blood-requests/:id",
+      authenticateToken,
+      async (req, res) => {
+        try {
+          const { id } = req.params;
+
+          if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+              error: "Invalid request ID",
+            });
+          }
+
+          const deletedRequest =
+            await BloodRequest.findByIdAndDelete(id);
+
+          if (!deletedRequest) {
+            return res.status(404).json({
+              error: "Blood request not found",
+            });
+          }
+
+          return res.status(200).json({
+            message: "Blood request deleted successfully",
+            request: deletedRequest,
+          });
+        } catch (error) {
+          console.error("DELETE BLOOD REQUEST error:", error);
+          return res.status(500).json({
+            error: error.message,
+          });
+        }
+      }
+    );
+
+    // =========================
+    // DONOR MATCHING API
+    // =========================
+
+    // MATCH DONORS FOR A BLOOD REQUEST
+    app.post("/api/match-donors", async (req, res) => {
+      try {
+        const { bloodRequestId } = req.body;
+
+        if (!bloodRequestId) {
+          return res.status(400).json({
+            error: "Blood request ID is required",
+          });
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(bloodRequestId)) {
+          return res.status(400).json({
+            error: "Invalid blood request ID",
+          });
+        }
+
+        const bloodRequest = await BloodRequest.findById(
+          bloodRequestId
+        );
+
+        if (!bloodRequest) {
+          return res.status(404).json({
+            error: "Blood request not found",
+          });
+        }
+
+        // Find matching donors
+        const matchingDonors = await Donor.find({
+          bloodGroup: bloodRequest.bloodGroup,
+          available: true,
+          location: bloodRequest.location,
+        }).populate("user");
+
+        return res.status(200).json({
+          requestId: bloodRequestId,
+          requiredBloodGroup: bloodRequest.bloodGroup,
+          requiredLocation: bloodRequest.location,
+          matchingDonorsCount: matchingDonors.length,
+          matchingDonors: matchingDonors,
+        });
+      } catch (error) {
+        console.error("MATCH DONORS error:", error);
+        return res.status(500).json({
+          error: error.message,
+        });
+      }
+    });
+
+    // GET MATCHING DONORS BY BLOOD GROUP AND LOCATION
+    app.get("/api/match-donors/:bloodGroup/:location", async (req, res) => {
+      try {
+        const { bloodGroup, location } = req.params;
+
+        const matchingDonors = await Donor.find({
+          bloodGroup,
+          available: true,
+          location,
+        }).populate("user");
+
+        return res.status(200).json({
+          bloodGroup,
+          location,
+          matchingDonorsCount: matchingDonors.length,
+          matchingDonors: matchingDonors,
+        });
+      } catch (error) {
+        console.error("GET MATCHING DONORS error:", error);
+        return res.status(500).json({
+          error: error.message,
+        });
+      }
+    });
 
     // =========================
     // START SERVER

@@ -1,0 +1,56 @@
+meta {
+  name: Update Blood Inventory
+  type: http
+  seq: 4
+}
+
+put {
+  url: http://localhost:5000/api/blood-inventory/:id
+  body: json
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+}
+
+params {
+  id: 
+}
+
+body:json {
+  {
+    "unitsAvailable": 15
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}
+
+docs {
+  # Update Blood Inventory
+  
+  Updates blood inventory units. Requires authentication.
+  
+  ## Authentication
+  Requires JWT token in Authorization header
+  
+  ## Path Parameters
+  - `id` (string, required): Inventory ID
+  
+  ## Request Body
+  - `unitsAvailable` (number, required): New number of units (must be >= 0)
+  
+  ## Response
+  Updated blood inventory object
+  
+  ## Status Codes
+  - 200: Success
+  - 400: Invalid input or ID
+  - 401: Missing or invalid token
+  - 404: Inventory not found
+  - 500: Server error
+}

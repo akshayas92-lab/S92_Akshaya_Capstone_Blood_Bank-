@@ -1,0 +1,32 @@
+meta {
+  name: Get Pending Blood Requests
+  type: http
+  seq: 4
+}
+
+get {
+  url: http://localhost:5000/api/blood-requests/status/pending
+}
+
+headers {
+  Content-Type: application/json
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}
+
+docs {
+  # Get Pending Blood Requests
+  
+  Retrieves all pending blood requests that haven't been fulfilled yet.
+  
+  ## Response
+  Array of blood request objects with status "pending"
+  
+  ## Status Codes
+  - 200: Success
+  - 500: Server error
+}

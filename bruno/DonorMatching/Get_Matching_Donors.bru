@@ -1,0 +1,49 @@
+meta {
+  name: Get Matching Donors by BloodGroup and Location
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://localhost:5000/api/match-donors/:bloodGroup/:location
+}
+
+headers {
+  Content-Type: application/json
+}
+
+params {
+  bloodGroup: O+
+  location: Chennai
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}
+
+docs {
+  # Get Matching Donors by Blood Group and Location
+  
+  Finds all available donors matching a specific blood group and location.
+  
+  ## Path Parameters
+  - `bloodGroup` (string, required): Blood group (A+, A-, B+, B-, AB+, AB-, O+, O-)
+  - `location` (string, required): Location
+  
+  ## Response
+  - `bloodGroup`: Requested blood group
+  - `location`: Requested location
+  - `matchingDonorsCount`: Number of matching donors
+  - `matchingDonors`: Array of matching donor objects
+  
+  ## Matching Criteria
+  - Same blood group as requested
+  - Available status is true
+  - Same location
+  
+  ## Status Codes
+  - 200: Success
+  - 500: Server error
+}

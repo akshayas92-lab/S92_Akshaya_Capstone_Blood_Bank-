@@ -1,0 +1,46 @@
+meta {
+  name: Delete Blood Inventory
+  type: http
+  seq: 5
+}
+
+delete {
+  url: http://localhost:5000/api/blood-inventory/:id
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+}
+
+params {
+  id: 
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}
+
+docs {
+  # Delete Blood Inventory
+  
+  Deletes a blood inventory record. Requires authentication.
+  
+  ## Authentication
+  Requires JWT token in Authorization header
+  
+  ## Path Parameters
+  - `id` (string, required): Inventory ID
+  
+  ## Response
+  Success message and deleted inventory object
+  
+  ## Status Codes
+  - 200: Success
+  - 400: Invalid inventory ID
+  - 401: Missing or invalid token
+  - 404: Inventory not found
+  - 500: Server error
+}
