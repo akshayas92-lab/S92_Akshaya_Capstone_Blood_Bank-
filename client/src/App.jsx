@@ -27,7 +27,12 @@ function App() {
 
   const [authLoading, setAuthLoading] = useState(true);
 
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState(null);
+
   const API_URL = "http://localhost:5000/api/blood-inventory";
+  const UPLOAD_URL = "http://localhost:5000/api/upload";
 
   // =========================
   // GOOGLE AUTHENTICATION
@@ -248,6 +253,66 @@ function App() {
   };
 
   // =========================
+  // FILE SELECT
+  // =========================
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+
+    if (!file) {
+      setSelectedFile(null);
+      return;
+    }
+
+    setSelectedFile(file);
+    setUploadedFile(null);
+  };
+
+  // =========================
+  // FILE UPLOAD
+  // =========================
+
+  const handleFileUpload = async (e) => {
+    e.preventDefault();
+
+    if (!selectedFile) {
+      alert("Please select a file first.");
+      return;
+    }
+
+    try {
+      setUploading(true);
+
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+
+      const response = await fetch(UPLOAD_URL, {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.error || "File upload failed.");
+        return;
+      }
+
+      setUploadedFile(data.file);
+      setSelectedFile(null);
+
+      e.target.reset();
+
+      alert("File uploaded successfully!");
+    } catch (err) {
+      console.error("FILE UPLOAD error:", err);
+      alert("Server error while uploading file.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // =========================
   // AUTH LOADING
   // =========================
 
@@ -347,6 +412,52 @@ function App() {
 
             <button type="submit">Add Inventory</button>
           </form>
+        </div>
+
+        {/* =========================
+            FILE UPLOAD
+        ========================= */}
+
+        <div className="inventory-form">
+          <h3>Upload File</h3>
+
+          <form onSubmit={handleFileUpload}>
+            <input
+              type="file"
+              onChange={handleFileChange}
+            />
+
+            <button type="submit" disabled={uploading}>
+              {uploading ? "Uploading..." : "Upload File"}
+            </button>
+          </form>
+
+          {selectedFile && (
+            <p>
+              Selected file: <strong>{selectedFile.name}</strong>
+            </p>
+          )}
+
+          {uploadedFile && (
+            <div>
+              <p>
+                Uploaded file:{" "}
+                <strong>{uploadedFile.originalName}</strong>
+              </p>
+
+              <p>
+                Size: <strong>{uploadedFile.size} bytes</strong>
+              </p>
+
+              <a
+                href={`http://localhost:5000${uploadedFile.path}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                View Uploaded File
+              </a>
+            </div>
+          )}
         </div>
 
         {/* =========================
