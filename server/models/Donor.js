@@ -1,4 +1,3 @@
-```js
 const mongoose = require("mongoose");
 
 const donorSchema = new mongoose.Schema(
@@ -46,4 +45,3 @@ donorSchema.set("toJSON", { virtuals: true });
 donorSchema.set("toObject", { virtuals: true });
 
 module.exports = mongoose.model("Donor", donorSchema);
-```
