@@ -1,7 +1,3 @@
-const dns = require("dns");
-
-dns.setServers(["8.8.8.8"]);
-
 require("dotenv").config({ path: __dirname + "/.env" });
 
 const express = require("express");
@@ -569,6 +565,7 @@ async function startServer() {
     app.get("/api/donors/blood-group/:bloodGroup", async (req, res) => {
       try {
         const { bloodGroup } = req.params;
+
         const donors = await Donor.find({
           bloodGroup,
           available: true,
@@ -596,17 +593,24 @@ async function startServer() {
         }
 
         const updateData = {};
+
         if (bloodGroup) updateData.bloodGroup = bloodGroup;
+
         if (age) {
           if (age < 18) {
             return res.status(400).json({
               error: "Donors must be at least 18 years old",
             });
           }
+
           updateData.age = age;
         }
+
         if (location) updateData.location = location;
-        if (available !== undefined) updateData.available = available;
+
+        if (available !== undefined) {
+          updateData.available = available;
+        }
 
         const updatedDonor = await Donor.findByIdAndUpdate(
           id,
@@ -699,6 +703,7 @@ async function startServer() {
         });
 
         const savedRequest = await bloodRequest.save();
+
         const populatedRequest = await savedRequest.populate([
           { path: "requester" },
           { path: "donor" },
@@ -793,6 +798,7 @@ async function startServer() {
         }
 
         const updateData = {};
+
         if (donor) updateData.donor = donor;
         if (status) updateData.status = status;
         if (urgency) updateData.urgency = urgency;
@@ -888,7 +894,6 @@ async function startServer() {
           });
         }
 
-        // Find matching donors
         const matchingDonors = await Donor.find({
           bloodGroup: bloodRequest.bloodGroup,
           available: true,
@@ -911,29 +916,32 @@ async function startServer() {
     });
 
     // GET MATCHING DONORS BY BLOOD GROUP AND LOCATION
-    app.get("/api/match-donors/:bloodGroup/:location", async (req, res) => {
-      try {
-        const { bloodGroup, location } = req.params;
+    app.get(
+      "/api/match-donors/:bloodGroup/:location",
+      async (req, res) => {
+        try {
+          const { bloodGroup, location } = req.params;
 
-        const matchingDonors = await Donor.find({
-          bloodGroup,
-          available: true,
-          location,
-        }).populate("user");
+          const matchingDonors = await Donor.find({
+            bloodGroup,
+            available: true,
+            location,
+          }).populate("user");
 
-        return res.status(200).json({
-          bloodGroup,
-          location,
-          matchingDonorsCount: matchingDonors.length,
-          matchingDonors: matchingDonors,
-        });
-      } catch (error) {
-        console.error("GET MATCHING DONORS error:", error);
-        return res.status(500).json({
-          error: error.message,
-        });
+          return res.status(200).json({
+            bloodGroup,
+            location,
+            matchingDonorsCount: matchingDonors.length,
+            matchingDonors: matchingDonors,
+          });
+        } catch (error) {
+          console.error("GET MATCHING DONORS error:", error);
+          return res.status(500).json({
+            error: error.message,
+          });
+        }
       }
-    });
+    );
 
     // =========================
     // START SERVER
