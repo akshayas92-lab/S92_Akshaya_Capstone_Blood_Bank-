@@ -18,9 +18,9 @@ function Hero() {
         </p>
 
         <div className="hero-buttons">
-          <button className="primary-button">
+          <a href="#requests" className="primary-button">
             Request Blood
-          </button>
+          </a>
 
           <a
             href="#donors"

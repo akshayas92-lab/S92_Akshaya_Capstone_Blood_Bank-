@@ -13,6 +13,7 @@ const BloodInventory = require("./models/BloodInventory");
 const User = require("./models/User");
 const Donor = require("./models/Donor");
 const BloodRequest = require("./models/BloodRequest");
+const { normalizeAiRequestDraft } = require("./utils/aiRequestAutocomplete");
 
 const app = express();
 
@@ -679,6 +680,89 @@ async function startServer() {
     // =========================
     // BLOOD REQUEST API ENDPOINTS
     // =========================
+
+    // Generate suggested blood request fields without exposing the provider key.
+    app.post(
+      "/api/ai/request-autocomplete",
+      authenticateToken,
+      async (req, res) => {
+        const { prompt } = req.body;
+
+        if (typeof prompt !== "string" || prompt.trim().length < 5) {
+          return res.status(400).json({
+            error: "Describe the request in at least 5 characters.",
+          });
+        }
+
+        if (prompt.trim().length > 1000) {
+          return res.status(400).json({
+            error: "Request description must be 1000 characters or fewer.",
+          });
+        }
+
+        if (!process.env.OPENAI_API_KEY) {
+          return res.status(503).json({
+            error: "AI autocomplete is not configured. Set OPENAI_API_KEY on the server.",
+          });
+        }
+
+        try {
+          const providerResponse = await fetch(
+            "https://api.openai.com/v1/chat/completions",
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+                temperature: 0.2,
+                max_tokens: 300,
+                response_format: { type: "json_object" },
+                messages: [
+                  {
+                    role: "system",
+                    content:
+                      "Extract only facts explicitly provided by the user for a blood request. Do not infer missing details or give medical advice. Return JSON with keys bloodGroup, unitsRequired, hospitalName, location, urgency. Use null for any missing or uncertain value. bloodGroup must be one of A+, A-, B+, B-, AB+, AB-, O+, O-. urgency must be one of low, medium, high, critical.",
+                  },
+                  { role: "user", content: prompt.trim() },
+                ],
+              }),
+              signal: AbortSignal.timeout(20000),
+            }
+          );
+
+          if (!providerResponse.ok) {
+            console.error(
+              "AI provider request failed with status:",
+              providerResponse.status
+            );
+            return res.status(502).json({
+              error: "The AI provider could not generate suggestions. Please try again.",
+            });
+          }
+
+          const providerData = await providerResponse.json();
+          const content = providerData.choices?.[0]?.message?.content;
+
+          if (typeof content !== "string") {
+            throw new Error("AI provider returned an empty response");
+          }
+
+          const suggestion = normalizeAiRequestDraft(JSON.parse(content));
+          return res.status(200).json({ suggestion });
+        } catch (error) {
+          console.error("AI request autocomplete error:", error.message);
+          return res.status(error.name === "TimeoutError" ? 504 : 502).json({
+            error:
+              error.name === "TimeoutError"
+                ? "AI suggestions timed out. Please try again."
+                : "Unable to generate request suggestions. Please try again.",
+          });
+        }
+      }
+    );
 
     // POST - CREATE BLOOD REQUEST
     app.post("/api/blood-requests", authenticateToken, async (req, res) => {

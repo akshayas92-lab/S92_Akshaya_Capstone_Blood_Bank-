@@ -18,6 +18,7 @@ The main goal of this project is to **reduce donor search time and improve the s
 * Location-based donor search
 * Donor availability status
 * Emergency blood request
+* AI-assisted autocomplete for blood request details
 * Blood request history
 * Blood inventory management
 * Admin management

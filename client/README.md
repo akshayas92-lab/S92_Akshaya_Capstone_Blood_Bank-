@@ -14,11 +14,27 @@ It stores the returned JWT for the session and sends it with protected inventory
 requests. Set `VITE_API_URL` to the deployed API origin when deploying the
 client.
 
+## AI-assisted blood request autocomplete
+
+On the **Request Blood** form, enter a plain-language description and select
+**Complete with AI** to draft the blood group, units, hospital, location, and
+urgency. Review or edit every suggested value before submitting the request.
+The feature calls the authenticated backend endpoint; the provider API key is
+never sent to the browser. The description is sent to OpenAI when autocomplete
+is requested.
+
+Set `OPENAI_API_KEY` in the backend environment to enable suggestions.
+`OPENAI_MODEL` is optional and defaults to `gpt-4o-mini`. For Docker Compose,
+set these values in the root `.env`; `OPENAI_API_KEY` may be left blank to
+disable autocomplete while keeping manual request submission available. Never
+put the provider key in a `VITE_` variable or commit it to source control.
+
 ## Checks
 
 - `npm run lint`
 - `npm run build`
 - `npm run preview` to serve the production build locally after building.
+- From `../server`, run `npm test` for backend tests.
 
 The local API fallback to `http://localhost:5000` is used only by the Vite
 development server. A production build requires `VITE_API_URL`; if it is
