@@ -54,6 +54,17 @@ function App() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [requestDraft, setRequestDraft] = useState({
+    bloodGroup: "",
+    unitsRequired: "",
+    hospitalName: "",
+    location: "",
+    urgency: "medium",
+  });
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState("");
+  const [requestStatus, setRequestStatus] = useState("");
 
   const API_URL = `${API_BASE_URL}/api/blood-inventory`;
   const UPLOAD_URL = `${API_BASE_URL}/api/upload`;
@@ -135,6 +146,71 @@ function App() {
     localStorage.removeItem("bloodBankToken");
     localStorage.removeItem("bloodBankUser");
     setSession(null);
+  };
+
+  const handleRequestAutocomplete = async () => {
+    setAiLoading(true);
+    setAiError("");
+    setRequestStatus("");
+
+    try {
+      const response = await apiFetch(`${API_BASE_URL}/api/ai/request-autocomplete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: aiPrompt }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to generate request suggestions.");
+      }
+
+      setRequestDraft((currentDraft) => ({
+        ...currentDraft,
+        ...Object.fromEntries(
+          Object.entries(data.suggestion).filter(([, value]) => value !== null)
+        ),
+      }));
+    } catch (err) {
+      console.error("AI autocomplete error:", err);
+      setAiError(err.message || "Unable to generate request suggestions.");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleBloodRequestSubmit = async (e) => {
+    e.preventDefault();
+    setRequestStatus("");
+
+    try {
+      const response = await apiFetch(`${API_BASE_URL}/api/blood-requests`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...requestDraft,
+          unitsRequired: Number(requestDraft.unitsRequired),
+        }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to submit blood request.");
+      }
+
+      setRequestStatus("Blood request submitted successfully.");
+      setRequestDraft({
+        bloodGroup: "",
+        unitsRequired: "",
+        hospitalName: "",
+        location: "",
+        urgency: "medium",
+      });
+      setAiPrompt("");
+    } catch (err) {
+      console.error("Blood request error:", err);
+      setRequestStatus(err.message || "Unable to submit blood request.");
+    }
   };
 
   // =========================
@@ -703,6 +779,124 @@ function App() {
               )}
             </div>
           ))}
+        </div>
+      </section>
+
+      <section id="requests" className="section">
+        <h2>Request Blood</h2>
+        <p className="section-subtitle">
+          Describe the need in plain language and let AI draft the request
+          details for you to review.
+        </p>
+
+        <div className="request-form-card">
+          <label htmlFor="ai-request-prompt">Describe the blood request</label>
+          <textarea
+            id="ai-request-prompt"
+            rows="3"
+            maxLength="1000"
+            placeholder="For example: City Hospital needs 2 units of O+ blood in Chennai urgently."
+            value={aiPrompt}
+            onChange={(e) => setAiPrompt(e.target.value)}
+          />
+          <button
+            type="button"
+            className="ai-autocomplete-button"
+            disabled={aiLoading || aiPrompt.trim().length < 5}
+            onClick={handleRequestAutocomplete}
+          >
+            {aiLoading ? "Generating suggestions..." : "✨ Complete with AI"}
+          </button>
+          {aiError && (
+            <p className="request-message request-error" role="alert">
+              {aiError}
+            </p>
+          )}
+
+          <form className="blood-request-form" onSubmit={handleBloodRequestSubmit}>
+            <label>
+              Blood group
+              <select
+                required
+                value={requestDraft.bloodGroup}
+                onChange={(e) =>
+                  setRequestDraft({ ...requestDraft, bloodGroup: e.target.value })
+                }
+              >
+                <option value="" disabled>Select a blood group</option>
+                {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(
+                  (group) => (
+                    <option key={group} value={group}>{group}</option>
+                  )
+                )}
+              </select>
+            </label>
+            <label>
+              Units required
+              <input
+                type="number"
+                min="1"
+                max="100"
+                required
+                value={requestDraft.unitsRequired}
+                onChange={(e) =>
+                  setRequestDraft({
+                    ...requestDraft,
+                    unitsRequired: e.target.value,
+                  })
+                }
+              />
+            </label>
+            <label>
+              Hospital
+              <input
+                type="text"
+                maxLength="120"
+                required
+                value={requestDraft.hospitalName}
+                onChange={(e) =>
+                  setRequestDraft({
+                    ...requestDraft,
+                    hospitalName: e.target.value,
+                  })
+                }
+              />
+            </label>
+            <label>
+              Location
+              <input
+                type="text"
+                maxLength="120"
+                required
+                value={requestDraft.location}
+                onChange={(e) =>
+                  setRequestDraft({ ...requestDraft, location: e.target.value })
+                }
+              />
+            </label>
+            <label>
+              Urgency
+              <select
+                value={requestDraft.urgency}
+                onChange={(e) =>
+                  setRequestDraft({ ...requestDraft, urgency: e.target.value })
+                }
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="critical">Critical</option>
+              </select>
+            </label>
+            <button type="submit">Submit Blood Request</button>
+          </form>
+          {requestStatus && (
+            <p className="request-message" role="status">{requestStatus}</p>
+          )}
+          <p className="ai-disclaimer">
+            AI suggestions can be inaccurate. Review every field before
+            submitting your request.
+          </p>
         </div>
       </section>
 
