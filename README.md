@@ -46,6 +46,17 @@ The main goal of this project is to **reduce donor search time and improve the s
 * **Version Control:** Git & GitHub
 * **Deployment:** Render
 
+## Frontend Unit Tests
+
+The React components are tested with Vitest and React Testing Library. To run
+the frontend unit tests:
+
+```powershell
+cd client
+npm install
+npm test
+```
+
 ## Expected Outcome
 
 The system aims to:
