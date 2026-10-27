@@ -173,7 +173,7 @@ git add .
 
 ### Command 3: Commit Changes
 ```powershell
-git commit -m "feat: Complete Blood Bank API with 28 endpoints and Bruno documentation
+git commit -m "feat: Complete Blood Bank API with 22 endpoints and Bruno documentation
 
 - Add Donor CRUD endpoints (6 endpoints)
 - Add Blood Request CRUD endpoints (6 endpoints)  
@@ -206,7 +206,7 @@ After pushing:
 2. You'll see a **"Compare & pull request"** button
 3. Click it
 4. Fill in:
-   - **Title**: `feat: Complete Blood Bank API with 28 endpoints and Bruno documentation`
+   - **Title**: `feat: Complete Blood Bank API with 22 endpoints and Bruno documentation`
    - **Description**: (Copy from commit message above)
 5. Click **"Create pull request"**
 
@@ -305,7 +305,7 @@ A: You may need to:
 ## 🎓 That's It!
 
 Follow these steps in order and you'll have:
-- ✅ Tested all 28 API endpoints in Bruno
+- ✅ Tested all 22 API endpoints in Bruno
 - ✅ Git commits ready
 - ✅ GitHub PR created
 - ✅ Video explanation recorded

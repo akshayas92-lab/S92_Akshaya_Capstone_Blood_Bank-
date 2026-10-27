@@ -157,7 +157,7 @@ Press: ENTER
 
 #### Command 5 - Commit
 ```powershell
-git commit -m "feat: Complete Blood Bank API with 28 endpoints and Bruno documentation
+git commit -m "feat: Complete Blood Bank API with 22 endpoints and Bruno documentation
 
 - Add Donor CRUD endpoints (6 endpoints)
 - Add Blood Request CRUD endpoints (6 endpoints)  
@@ -186,7 +186,7 @@ Press: ENTER
 1. Go to: https://github.com/YOUR_USERNAME/blood-bank-project
 2. Look for: "Compare & pull request" button (yellow/green)
 3. Click it
-4. Fill Title: feat: Complete Blood Bank API with 28 endpoints
+4. Fill Title: feat: Complete Blood Bank API with 22 endpoints
 5. Fill Description: (copy from commit message above)
 6. Click: "Create pull request"
 7. Wait for it to be created

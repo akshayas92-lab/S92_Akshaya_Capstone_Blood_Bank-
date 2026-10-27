@@ -22,3 +22,42 @@
   padding: 8px;
   margin: 8px 0;
 }
+
+.auth-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.auth-form input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font: inherit;
+}
+
+.auth-form button,
+.auth-mode-toggle {
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.auth-form button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.auth-mode-toggle {
+  margin-top: 12px;
+  background: transparent;
+  color: #7f1d1d;
+}
+
+.auth-error {
+  color: #b91c1c;
+}

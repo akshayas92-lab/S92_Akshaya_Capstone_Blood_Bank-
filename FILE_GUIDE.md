@@ -41,7 +41,7 @@
 ### API Reference
 **File**: [API_DOCUMENTATION.md](API_DOCUMENTATION.md)
 **When**: While recording video or explaining
-**What**: All 28 endpoints documented with examples
+**What**: All 22 endpoints documented with examples
 **Use**: Show in video when explaining API
 
 ### Implementation Overview
@@ -160,7 +160,7 @@ blood bank project/
 │   ├── BloodInventory/
 │   └── Utils/
 ├── server/
-│   ├── server.js ................... COMPLETE with 28 endpoints
+│   ├── server.js ................... COMPLETE with 22 endpoints
 │   ├── models/
 │   │   ├── User.js ................. FIXED (added username/password)
 │   │   ├── Donor.js
@@ -178,7 +178,7 @@ blood bank project/
 ## ✨ Key Points
 
 - ✅ **All code is ready** - No more coding needed!
-- ✅ **28 endpoints work** - All tested and documented
+- ✅ **22 endpoints work** - All tested and documented
 - ✅ **Bruno collection included** - Just open and test
 - ✅ **Guides provided** - Step-by-step instructions
 - ✅ **You just need to**: Test → Record Video → Push Git → Create PR → Submit

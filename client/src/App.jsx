@@ -1,18 +1,33 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Navbar from "./Components/Navbar";
 import Hero from "./Components/Hero";
 import "./App.css";
 
-import {
-  signInWithPopup,
-  signOut,
-  onAuthStateChanged,
-} from "firebase/auth";
-
-import { auth, googleProvider } from "./firebase";
+const API_BASE_URL = (
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? "http://localhost:5000" : "")
+).replace(/\/$/, "");
+const API_CONFIGURATION_ERROR =
+  "VITE_API_URL is not configured. Set it to your backend base URL.";
 
 function App() {
-  const [user, setUser] = useState(null);
+  const [session, setSession] = useState(() => {
+    const token = localStorage.getItem("bloodBankToken");
+    const savedUser = localStorage.getItem("bloodBankUser");
+
+    if (!token || !savedUser) {
+      return null;
+    }
+
+    try {
+      return { token, user: JSON.parse(savedUser) };
+    } catch (error) {
+      console.error("Stored user data is invalid:", error);
+      localStorage.removeItem("bloodBankToken");
+      localStorage.removeItem("bloodBankUser");
+      return null;
+    }
+  });
 
   const [inventory, setInventory] = useState([]);
 
@@ -22,80 +37,147 @@ function App() {
   const [editingId, setEditingId] = useState(null);
   const [editUnits, setEditUnits] = useState("");
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(Boolean(session));
   const [error, setError] = useState("");
 
-  const [authLoading, setAuthLoading] = useState(true);
+  const [authMode, setAuthMode] = useState("login");
+  const [authForm, setAuthForm] = useState({
+    username: "",
+    password: "",
+    name: "",
+    email: "",
+    phone: "",
+  });
+  const [authError, setAuthError] = useState("");
+  const [authSubmitting, setAuthSubmitting] = useState(false);
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
 
-  const API_URL = "http://localhost:5000/api/blood-inventory";
-  const UPLOAD_URL = "http://localhost:5000/api/upload";
+  const API_URL = `${API_BASE_URL}/api/blood-inventory`;
+  const UPLOAD_URL = `${API_BASE_URL}/api/upload`;
 
-  // =========================
-  // GOOGLE AUTHENTICATION
-  // =========================
+  const apiFetch = useCallback(
+    (url, options = {}) => {
+      if (!API_BASE_URL) {
+        throw new Error(API_CONFIGURATION_ERROR);
+      }
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setAuthLoading(false);
-    });
+      const headers = new Headers(options.headers);
 
-    return () => unsubscribe();
-  }, []);
+      if (session?.token) {
+        headers.set("Authorization", `Bearer ${session.token}`);
+      }
 
-  const handleGoogleLogin = async () => {
+      return fetch(url, { ...options, headers });
+    },
+    [session]
+  );
+
+  const handleAuthSubmit = async (e) => {
+    e.preventDefault();
+    setAuthError("");
+    setAuthSubmitting(true);
+
     try {
-      await signInWithPopup(auth, googleProvider);
+      if (!API_BASE_URL) {
+        throw new Error(API_CONFIGURATION_ERROR);
+      }
+
+      if (authMode === "register") {
+        const registerResponse = await fetch(
+          `${API_BASE_URL}/api/auth/register`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(authForm),
+          }
+        );
+        const registerData = await registerResponse.json();
+
+        if (!registerResponse.ok) {
+          throw new Error(registerData.error || "Registration failed.");
+        }
+      }
+
+      const loginResponse = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: authForm.username,
+          password: authForm.password,
+        }),
+      });
+      const loginData = await loginResponse.json();
+
+      if (!loginResponse.ok) {
+        throw new Error(loginData.error || "Login failed.");
+      }
+
+      localStorage.setItem("bloodBankToken", loginData.token);
+      localStorage.setItem("bloodBankUser", JSON.stringify(loginData.user));
+      setLoading(true);
+      setSession({ token: loginData.token, user: loginData.user });
     } catch (err) {
-      console.error("Google login error:", err);
-      alert("Google login failed. Please try again.");
+      console.error("Authentication error:", err);
+      setAuthError(
+        err instanceof TypeError
+          ? `Unable to connect to the API at ${API_BASE_URL}. Start the backend and check its database configuration.`
+          : err.message || "Unable to authenticate."
+      );
+    } finally {
+      setAuthSubmitting(false);
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      alert("Logged out successfully.");
-    } catch (err) {
-      console.error("Logout error:", err);
-      alert("Logout failed.");
-    }
+  const handleLogout = () => {
+    localStorage.removeItem("bloodBankToken");
+    localStorage.removeItem("bloodBankUser");
+    setSession(null);
   };
 
   // =========================
   // GET ALL INVENTORY
   // =========================
 
-  const fetchInventory = async () => {
+  const requestInventory = useCallback(async () => {
+    const response = await apiFetch(API_URL);
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Failed to fetch inventory");
+    }
+
+    return data;
+  }, [apiFetch, API_URL]);
+
+  const fetchInventory = useCallback(async () => {
     try {
-      setLoading(true);
+      setInventory(await requestInventory());
       setError("");
-
-      const response = await fetch(API_URL);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to fetch inventory");
-      }
-
-      setInventory(data);
     } catch (err) {
       console.error("GET error:", err);
-      setError("Unable to load blood inventory.");
+      setError(err.message || "Unable to load blood inventory.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [requestInventory]);
 
   useEffect(() => {
-    if (user) {
-      fetchInventory();
+    if (session) {
+      requestInventory()
+        .then((data) => {
+          setInventory(data);
+          setError("");
+        })
+        .catch((err) => {
+          console.error("GET error:", err);
+          setError(err.message || "Unable to load blood inventory.");
+        })
+        .finally(() => setLoading(false));
     }
-  }, [user]);
+  }, [session, requestInventory]);
 
   // =========================
   // ADD INVENTORY
@@ -115,7 +197,7 @@ function App() {
     }
 
     try {
-      const response = await fetch(API_URL, {
+      const response = await apiFetch(API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -136,6 +218,8 @@ function App() {
       alert("Blood inventory added successfully!");
 
       setUnitsAvailable("");
+      setLoading(true);
+      setError("");
       fetchInventory();
     } catch (err) {
       console.error("POST error:", err);
@@ -177,7 +261,7 @@ function App() {
     }
 
     try {
-      const response = await fetch(`${API_URL}/${id}`, {
+      const response = await apiFetch(`${API_URL}/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -230,7 +314,7 @@ function App() {
     }
 
     try {
-      const response = await fetch(`${API_URL}/${id}`, {
+      const response = await apiFetch(`${API_URL}/${id}`, {
         method: "DELETE",
       });
 
@@ -286,7 +370,7 @@ function App() {
       const formData = new FormData();
       formData.append("file", selectedFile);
 
-      const response = await fetch(UPLOAD_URL, {
+      const response = await apiFetch(UPLOAD_URL, {
         method: "POST",
         body: formData,
       });
@@ -313,35 +397,105 @@ function App() {
   };
 
   // =========================
-  // AUTH LOADING
-  // =========================
-
-  if (authLoading) {
-    return (
-      <div className="auth-container">
-        <h2>Checking authentication...</h2>
-      </div>
-    );
-  }
-
   // =========================
   // LOGIN SCREEN
   // =========================
 
-  if (!user) {
+  if (!session) {
     return (
       <div className="auth-container">
         <div className="auth-card">
           <h1>Blood Bank</h1>
 
-          <p>Login to access the Blood Bank System</p>
+          <p>
+            {authMode === "login"
+              ? "Login to access the Blood Bank System"
+              : "Create an account to access the Blood Bank System"}
+          </p>
+
+          <form className="auth-form" onSubmit={handleAuthSubmit}>
+            {authMode === "register" && (
+              <>
+                <input
+                  type="text"
+                  placeholder="Full name"
+                  autoComplete="name"
+                  required
+                  value={authForm.name}
+                  onChange={(e) =>
+                    setAuthForm({ ...authForm, name: e.target.value })
+                  }
+                />
+                <input
+                  type="email"
+                  placeholder="Email"
+                  autoComplete="email"
+                  required
+                  value={authForm.email}
+                  onChange={(e) =>
+                    setAuthForm({ ...authForm, email: e.target.value })
+                  }
+                />
+                <input
+                  type="tel"
+                  placeholder="Phone"
+                  autoComplete="tel"
+                  required
+                  value={authForm.phone}
+                  onChange={(e) =>
+                    setAuthForm({ ...authForm, phone: e.target.value })
+                  }
+                />
+              </>
+            )}
+            <input
+              type="text"
+              placeholder="Username"
+              autoComplete="username"
+              required
+              value={authForm.username}
+              onChange={(e) =>
+                setAuthForm({ ...authForm, username: e.target.value })
+              }
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              autoComplete={
+                authMode === "login" ? "current-password" : "new-password"
+              }
+              minLength={8}
+              required
+              value={authForm.password}
+              onChange={(e) =>
+                setAuthForm({ ...authForm, password: e.target.value })
+              }
+            />
+            {authError && (
+              <p className="auth-error" role="alert">
+                {authError}
+              </p>
+            )}
+            <button type="submit" disabled={authSubmitting}>
+              {authSubmitting
+                ? "Please wait..."
+                : authMode === "login"
+                  ? "Login"
+                  : "Create account"}
+            </button>
+          </form>
 
           <button
             type="button"
-            className="google-login-btn"
-            onClick={handleGoogleLogin}
+            className="auth-mode-toggle"
+            onClick={() => {
+              setAuthMode(authMode === "login" ? "register" : "login");
+              setAuthError("");
+            }}
           >
-            Continue with Google
+            {authMode === "login"
+              ? "Need an account? Register"
+              : "Already registered? Login"}
           </button>
         </div>
       </div>
@@ -359,7 +513,7 @@ function App() {
       <div className="user-auth-bar">
         <div>
           <span>Welcome, </span>
-          <strong>{user.displayName || user.email}</strong>
+          <strong>{session.user.name || session.user.username}</strong>
         </div>
 
         <button type="button" onClick={handleLogout}>
@@ -450,7 +604,7 @@ function App() {
               </p>
 
               <a
-                href={`http://localhost:5000${uploadedFile.path}`}
+                href={`${API_BASE_URL}${uploadedFile.path}`}
                 target="_blank"
                 rel="noreferrer"
               >

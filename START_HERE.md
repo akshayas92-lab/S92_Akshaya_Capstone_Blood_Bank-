@@ -2,7 +2,7 @@
 
 ## What You Have
 
-### ✅ Complete API (28 endpoints)
+### ✅ Complete API (22 endpoints)
 - All endpoints are written and ready
 - All endpoints are documented
 - No more coding needed!
@@ -75,7 +75,7 @@ git push -u origin feature/complete-api-endpoints
 ### Reference During Work:
 📄 **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)**
 - Show in video
-- All 28 endpoints explained
+- All 22 endpoints explained
 - Request/response examples
 
 📁 **[bruno/](bruno/)** folder

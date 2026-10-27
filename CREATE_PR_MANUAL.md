@@ -15,7 +15,7 @@ https://github.com/akshayas92-lab/S92_Akshaya_Capstone_Blood_Bank-/pull/new/feat
 
 ### PR Title (already pre-filled, but here it is):
 ```
-feat: Complete Blood Bank API with 28 endpoints and Bruno documentation
+feat: Complete Blood Bank API with 22 endpoints and Bruno documentation
 ```
 
 ### PR Description (Copy and paste this):
@@ -24,7 +24,7 @@ feat: Complete Blood Bank API with 28 endpoints and Bruno documentation
 ## 🎯 Complete Blood Bank Management System API
 
 ### What's Included
-- **28 RESTful API endpoints** fully implemented and tested
+- **22 RESTful API endpoints** implemented and documented in Bruno
 - **MongoDB database integration** with 4 models
 - **JWT authentication** with role-based access control
 - **Complete Bruno documentation** for all endpoints
@@ -120,7 +120,7 @@ After clicking, you'll be redirected to your new PR page.
 ### What You'll See (Before Creating):
 ```
 Title field (pre-filled):
-feat: Complete Blood Bank API with 28 endpoints and Bruno documentation
+feat: Complete Blood Bank API with 22 endpoints and Bruno documentation
 
 Description field:
 [Large text area with the description above]
@@ -149,10 +149,10 @@ You'll see the PR page with:
 
 ## 📋 Summary of What Gets Created
 
-- **PR Title**: "feat: Complete Blood Bank API with 28 endpoints and Bruno documentation"
+- **PR Title**: "feat: Complete Blood Bank API with 22 endpoints and Bruno documentation"
 - **Base Branch**: `main`
 - **Compare Branch**: `feature/complete-api-endpoints`
-- **Description**: Complete overview of the 28 API endpoints
+- **Description**: Complete overview of the 22 API endpoints
 - **Files Changed**: All the work you've done on the branch
 - **Status**: Open (ready for review)
 
@@ -164,7 +164,7 @@ You'll see the PR page with:
 |------|-------|
 | Repository | akshayas92-lab/S92_Akshaya_Capstone_Blood_Bank- |
 | PR URL Format | `https://github.com/akshayas92-lab/S92_Akshaya_Capstone_Blood_Bank-/pull/XX` |
-| API Endpoints | 28 Total |
+| API Endpoints | 22 Total |
 | Database | MongoDB |
 | Authentication | JWT |
 | Testing Tool | Bruno |
