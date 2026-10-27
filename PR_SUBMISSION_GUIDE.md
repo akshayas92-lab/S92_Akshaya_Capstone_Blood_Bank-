@@ -46,7 +46,7 @@
 #### File Upload (1 endpoint)
 - ✅ POST `/api/upload` - Upload files
 
-**Total: 28 API Endpoints**
+**Total: 22 API Endpoints**
 
 ### 4. **API Documentation**
    - ✅ Complete API documentation in `API_DOCUMENTATION.md`
@@ -118,7 +118,7 @@ git commit -m "feat: Complete API endpoints with Bruno documentation
 - Complete API documentation with examples
 - Add Bruno collection for endpoint testing
 - Add authentication and validation
-- Total: 28 fully documented API endpoints"
+- Total: 22 fully documented API endpoints"
 ```
 
 ### Step 4: Push to GitHub
@@ -161,7 +161,7 @@ This PR implements all missing API endpoints for the Blood Bank Real-Time Donor 
 - Clear authentication requirements documented
 
 ### Total Impact:
-- 28 fully functional API endpoints
+- 22 fully functional API endpoints
 - 100% API coverage for Blood Bank system
 - Production-ready authentication and validation
 

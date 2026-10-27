@@ -2,14 +2,14 @@
 
 ## Status: ✅ Project Complete - Ready for Submission
 
-Your Blood Bank project is **fully complete** with all 28 API endpoints implemented and documented. You are now at the final step!
+The project includes **22 API endpoints** documented in Bruno. The completed API pull request is available below.
 
 ---
 
 ## 📋 What You Need to Submit
 
 ### ✅ Requirement 1: GitHub PR Link
-A pull request linking your `feature/complete-api-endpoints` branch to `main` with all API endpoints.
+[Completed API pull request](https://github.com/akshayas92-lab/S92_Akshaya_Capstone_Blood_Bank-/pull/14) for the `feature/complete-api-endpoints` branch.
 
 **PR URL Format**: `https://github.com/akshayas92-lab/S92_Akshaya_Capstone_Blood_Bank-/pull/XX`
 
@@ -20,22 +20,20 @@ A 5-10 minute video where YOU are clearly visible explaining your project.
 
 ---
 
-## 🔗 STEP 1: Create Your GitHub PR
+## 🔗 STEP 1: Verify Your GitHub PR
 
 ### Quick Links:
-- **Your PR Creation Link**: https://github.com/akshayas92-lab/S92_Akshaya_Capstone_Blood_Bank-/pull/new/feature/complete-api-endpoints
+- **Completed API PR**: https://github.com/akshayas92-lab/S92_Akshaya_Capstone_Blood_Bank-/pull/14
 - **Manual Instructions**: See `CREATE_PR_MANUAL.md` in this folder
 
 ### Steps:
-1. Go to: https://github.com/akshayas92-lab/S92_Akshaya_Capstone_Blood_Bank-/pull/new/feature/complete-api-endpoints
-2. Log in to GitHub if needed
-3. GitHub will auto-fill the title and description
-4. Scroll down and click the green **"Create pull request"** button
-5. Copy the resulting PR URL (format: `https://github.com/akshayas92-lab/S92_Akshaya_Capstone_Blood_Bank-/pull/XX`)
+1. Open the completed PR link above.
+2. Confirm its API and Bruno changes are visible.
+3. Submit the PR URL in the assignment form.
 
 ### PR Details That Will Be Created:
-- **Title**: feat: Complete Blood Bank API with 28 endpoints and Bruno documentation
-- **Description**: Comprehensive details of all 28 API endpoints
+- **Title**: feat: Complete Blood Bank API with 22 endpoints and Bruno documentation
+- **Description**: Comprehensive details of all 22 API endpoints
 - **Base Branch**: main
 - **Compare Branch**: feature/complete-api-endpoints
 
@@ -68,7 +66,7 @@ A 5-10 minute video where YOU are clearly visible explaining your project.
 
 5. **API Endpoints Demo** (3-4 minutes)
    - Open Bruno in VS Code
-   - Show the 28 endpoints organized in folders:
+   - Show the 22 endpoints organized in folders:
      - Auth (2 endpoints)
      - BloodInventory (5 endpoints)
      - Donors (6 endpoints)
@@ -142,7 +140,7 @@ https://youtu.be/[YOUR_VIDEO_ID]
 Before submitting, verify:
 
 ### Code Quality
-- [x] All 28 API endpoints implemented
+- [x] All 22 API endpoints documented
 - [x] MongoDB models created correctly
 - [x] JWT authentication working
 - [x] Error handling in place
@@ -160,7 +158,7 @@ Before submitting, verify:
 ### Video Explanation
 - [ ] You are clearly visible on camera
 - [ ] Audio is clear and audible
-- [ ] All 28 endpoints shown in Bruno
+- [ ] All 22 endpoints shown in Bruno
 - [ ] Code walkthrough included
 - [ ] API demo with real responses
 - [ ] Video is 5-10 minutes
@@ -203,7 +201,7 @@ Before submitting, verify:
 **1 File Upload Endpoint:**
 - POST /api/upload
 
-**Total: 28 Endpoints** ✅
+**Total: 22 Endpoints** ✅
 
 ---
 
@@ -252,7 +250,7 @@ You're all set! Your project is complete and professional. Just:
 
 | Item | Link/URL |
 |------|----------|
-| PR Creation | https://github.com/akshayas92-lab/S92_Akshaya_Capstone_Blood_Bank-/pull/new/feature/complete-api-endpoints |
+| API Pull Request | https://github.com/akshayas92-lab/S92_Akshaya_Capstone_Blood_Bank-/pull/14 |
 | Manual PR Guide | CREATE_PR_MANUAL.md |
 | Project Repo | https://github.com/akshayas92-lab/S92_Akshaya_Capstone_Blood_Bank- |
 | Bruno Tests | /bruno/ folder |

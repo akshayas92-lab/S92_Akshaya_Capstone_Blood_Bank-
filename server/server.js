@@ -1,6 +1,7 @@
 require("dotenv").config({ path: __dirname + "/.env" });
 
 const express = require("express");
+const fs = require("fs");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
@@ -19,9 +20,12 @@ const app = express();
 // MULTER FILE UPLOAD SETUP
 // =========================
 
+const uploadDirectory = path.join(__dirname, "uploads");
+fs.mkdirSync(uploadDirectory, { recursive: true });
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, "uploads"));
+    cb(null, uploadDirectory);
   },
 
   filename: function (req, file, cb) {
@@ -76,6 +80,14 @@ console.log(
 
 async function startServer() {
   try {
+    if (!process.env.MONGODB_URI) {
+      throw new Error("MONGODB_URI environment variable is required");
+    }
+
+    if (!process.env.JWT_SECRET) {
+      throw new Error("JWT_SECRET environment variable is required");
+    }
+
     // =========================
     // CONNECT TO MONGODB
     // =========================
@@ -110,7 +122,7 @@ async function startServer() {
           });
         }
 
-        const cleanUsername = username.trim();
+        const cleanUsername = username.trim().toLowerCase();
         const cleanEmail = email.trim().toLowerCase();
 
         const existingUser = await User.findOne({
@@ -175,8 +187,8 @@ async function startServer() {
         }
 
         const user = await User.findOne({
-          username: username.trim(),
-        });
+          username: username.trim().toLowerCase(),
+        }).select("+password");
 
         if (!user) {
           return res.status(401).json({
@@ -953,10 +965,8 @@ async function startServer() {
       );
     });
   } catch (error) {
-    console.error(
-      "MongoDB connection failed:",
-      error.message
-    );
+    console.error("Server startup failed:", error.message);
+    process.exitCode = 1;
   }
 }
 

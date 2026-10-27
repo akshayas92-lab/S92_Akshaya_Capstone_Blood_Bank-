@@ -7,7 +7,7 @@ This is a complete Blood Bank Management System with 28 fully functional API end
 
 ### Current State
 - **Branch**: `feature/complete-api-endpoints`
-- **Status**: All 28 API endpoints implemented and tested
+- **Status**: All 22 API endpoints implemented and documented in Bruno
 - **Database**: MongoDB integrated with 4 models (User, Donor, BloodInventory, BloodRequest)
 - **Authentication**: JWT-based authorization implemented
 - **File Upload**: Multer integration for file handling
@@ -29,7 +29,7 @@ https://github.com/akshayas92-lab/S92_Akshaya_Capstone_Blood_Bank-/pull/new/feat
 
 ---
 
-## 📊 Complete API Endpoints (28 Total)
+## 📊 Complete API Endpoints (22 Total)
 
 ### 🔐 Authentication (2 endpoints)
 - `POST /api/auth/register` - User registration
@@ -93,7 +93,7 @@ https://github.com/akshayas92-lab/S92_Akshaya_Capstone_Blood_Bank-/pull/new/feat
    - BloodRequest model (bloodGroup, unitsRequired, hospitalName, urgency)
 
 5. **API Endpoints Demo (3-5 minutes)**
-   - Show Bruno collection with all 28 endpoints
+   - Show Bruno collection with all 22 endpoints
    - Demo 3-4 key endpoints:
      1. Register/Login (auth)
      2. Create/Get Blood Inventory
@@ -126,7 +126,7 @@ https://github.com/akshayas92-lab/S92_Akshaya_Capstone_Blood_Bank-/pull/new/feat
 
 ## 📝 Bruno Documentation
 
-All 28 API endpoints are documented in Bruno at: `/bruno/` folder
+All 22 API endpoints are documented in Bruno at: `/bruno/` folder
 
 **Main categories:**
 - `Auth/` - Authentication endpoints
@@ -173,7 +173,7 @@ Server runs on: `http://localhost:5000`
 ## 📥 Submission Checklist
 
 ### Before Submitting
-- [x] All 28 API endpoints implemented
+- [x] All 22 API endpoints implemented
 - [x] MongoDB models created and tested
 - [x] JWT authentication working
 - [x] Error handling in place
