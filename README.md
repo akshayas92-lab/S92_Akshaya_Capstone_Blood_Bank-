@@ -232,3 +232,27 @@ The system aims to:
 ## Conclusion
 
 The **Real-Time Blood Donor Matching System** aims to make emergency blood donor identification faster and more organized. By combining donor information, blood group matching, location, and availability status, the system can help blood banks and hospitals identify suitable donors more efficiently.
+
+## Run with Docker
+
+Docker Compose runs the React frontend, Express API, and MongoDB together. Install Docker Desktop with Compose, then run these commands from the project root in PowerShell:
+
+```powershell
+Copy-Item .env.docker.example .env
+```
+
+Edit `.env` and replace `JWT_SECRET` with a long, private value. Then build and start the application:
+
+```powershell
+docker compose up --build -d
+```
+
+Open the frontend at [http://localhost:8080](http://localhost:8080). The API is available at [http://localhost:5000](http://localhost:5000). MongoDB data and uploaded files are stored in named Docker volumes and persist when the containers stop.
+
+To stop the application without removing its data:
+
+```powershell
+docker compose down
+```
+
+The frontend API URL is set at build time through `VITE_API_URL` in `.env`; if you change it, rebuild the client with `docker compose up --build -d`.
