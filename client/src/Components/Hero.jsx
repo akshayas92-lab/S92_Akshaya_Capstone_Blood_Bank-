@@ -2,43 +2,45 @@ function Hero() {
   return (
     <section className="hero" id="home">
       <div className="hero-content">
-        <p className="hero-tag">
-          🩸 FAST • SAFE • RELIABLE
-        </p>
+        <div className="hero-tag"><span className="live-dot" /> FAST, SAFE &amp; RELIABLE</div>
 
         <h1>
-          Find Blood.
-          <br />
-          <span>Save Lives.</span>
+          Every drop can be<br />
+          <span>someone's tomorrow.</span>
         </h1>
 
         <p className="hero-description">
-          Connect emergency blood requests with eligible
-          donors quickly and efficiently.
+          A trusted platform connecting hospitals, blood banks and generous
+          donors when every second matters.
         </p>
 
         <div className="hero-buttons">
           <a href="#requests" className="primary-button">
-            Request Blood
+            Request blood <span aria-hidden="true">↗</span>
           </a>
 
-          <a
-            href="#donors"
-            className="secondary-button"
-          >
-            Find a Donor
-          </a>
+          <a href="#inventory" className="secondary-button">View inventory</a>
         </div>
       </div>
 
       <div className="hero-card">
-        <div className="blood-drop">🩸</div>
-
-        <h3>Every Drop Counts</h3>
-
-        <p>
-          Your donation can help save someone's life.
-        </p>
+        <div className="hero-card-top">
+          <span className="mini-label">LIVE AVAILABILITY</span>
+          <span className="status-pill"><span /> Updated now</span>
+        </div>
+        <div className="blood-illustration" aria-hidden="true">
+          <div className="blood-orb">+</div>
+          <span className="orbit orbit-one" />
+          <span className="orbit orbit-two" />
+        </div>
+        <div className="hero-card-copy">
+          <h3>Make an impact today</h3>
+          <p>One donation can save up to three lives.</p>
+        </div>
+        <div className="hero-card-footer">
+          <div className="avatar-stack"><span>R</span><span>A</span><span>V</span><b>+2k</b></div>
+          <span>Donors making a difference</span>
+        </div>
       </div>
     </section>
   );
