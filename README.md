@@ -28,6 +28,17 @@ connected to an Express and MongoDB API.
 - **API testing:** Bruno collection in [`bruno/`](./bruno/)
 - **Deployment configuration:** Netlify (frontend), Render (backend), Docker Compose
 
+## Frontend Unit Tests
+
+The React components are tested with Vitest and React Testing Library. To run
+the frontend unit tests:
+
+```powershell
+cd client
+npm install
+npm test
+```
+
 ## Architecture Overview
 
 The project is organized as a client-server application:
