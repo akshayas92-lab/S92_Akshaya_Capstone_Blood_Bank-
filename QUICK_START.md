@@ -1,5 +1,43 @@
 # 🎯 QUICK START - Do This Now
 
+## Start the application locally
+
+The frontend uses `http://localhost:5000` for the backend in development. Start
+the backend from the `server` folder before opening the frontend:
+
+```powershell
+cd "C:\Users\aksha\OneDrive\Desktop\blood bank project\server"
+npm.cmd start
+```
+
+The backend must be able to connect to MongoDB before it starts listening on
+port 5000. Copy `server\.env.example` to `server\.env` and set:
+
+```env
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster-host>/bloodbank
+JWT_SECRET=<long-random-secret>
+PORT=5000
+# Optional: set this only if Node reports a MongoDB querySrv ECONNREFUSED error.
+DNS_SERVERS=10.28.84.102
+```
+
+Use the complete connection string copied from MongoDB Atlas, including the
+real cluster hostname. If using a local MongoDB installation instead, use
+`MONGODB_URI=mongodb://127.0.0.1:27017/blood-bank` and make sure the MongoDB
+service is running.
+
+If the backend logs `querySrv ECONNREFUSED` for an Atlas `mongodb+srv` URI,
+set `DNS_SERVERS` to a working DNS server for your network (Windows DNS can
+be found with `Get-DnsClientServerAddress`) and restart the backend.
+
+Verify the backend before opening the frontend:
+
+```powershell
+Invoke-RestMethod http://localhost:5000/health
+```
+
+This should return `"status": "ok"` and `"database": "connected"`.
+
 ## 📥 PART 1: BRUNO SETUP (5 minutes)
 
 ### STEP 1️⃣ - Download Bruno

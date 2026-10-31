@@ -134,7 +134,7 @@ function App() {
       console.error("Authentication error:", err);
       setAuthError(
         err instanceof TypeError
-          ? `Unable to connect to the API at ${API_BASE_URL}. Start the backend and check its database configuration.`
+          ? `Unable to connect to the API at ${API_BASE_URL}. Start the backend from the server folder and check its database configuration.`
           : err.message || "Unable to authenticate."
       );
     } finally {

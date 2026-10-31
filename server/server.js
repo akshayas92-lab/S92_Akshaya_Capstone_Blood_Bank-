@@ -2,6 +2,7 @@ require("dotenv").config({ path: __dirname + "/.env" });
 
 const express = require("express");
 const fs = require("fs");
+const dns = require("dns");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
@@ -46,6 +47,27 @@ app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 const PORT = process.env.PORT || 5000;
+const configuredDnsServers = (process.env.DNS_SERVERS || "")
+  .split(",")
+  .map((server) => server.trim())
+  .filter(Boolean);
+
+if (configuredDnsServers.length > 0) {
+  dns.setServers(configuredDnsServers);
+  console.log("Using configured DNS servers for MongoDB:", configuredDnsServers.join(", "));
+}
+
+app.get("/health", (req, res) => {
+  const databaseState = mongoose.connection.readyState;
+  const databaseStatus = ["disconnected", "connected", "connecting", "disconnecting"][
+    databaseState
+  ] || "unknown";
+
+  res.status(databaseState === 1 ? 200 : 503).json({
+    status: databaseState === 1 ? "ok" : "degraded",
+    database: databaseStatus,
+  });
+});
 
 // =========================
 // JWT AUTHORIZATION MIDDLEWARE
@@ -1050,6 +1072,18 @@ async function startServer() {
     });
   } catch (error) {
     console.error("Server startup failed:", error.message);
+    if (
+      error.message.includes("querySrv") ||
+      (error.code === "ECONNREFUSED" && error.syscall === "querySrv")
+    ) {
+      console.error(
+        "MongoDB Atlas DNS lookup failed. Verify the Atlas cluster hostname and your network/DNS settings."
+      );
+    } else if (error.code === "ECONNREFUSED" || error.code === "ENOTFOUND") {
+      console.error(
+        "Check MONGODB_URI in server/.env and confirm that the MongoDB host is reachable."
+      );
+    }
     process.exitCode = 1;
   }
 }
